@@ -1,0 +1,5 @@
+/*
+    errorHandler.js
+    centralized error handling
+
+*/

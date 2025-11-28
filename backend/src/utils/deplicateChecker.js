@@ -1,0 +1,4 @@
+/*
+    deplicateChecker.js
+    Function to prevent duplicate SKUs
+*/

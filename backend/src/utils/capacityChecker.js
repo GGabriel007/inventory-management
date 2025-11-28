@@ -1,0 +1,5 @@
+/*
+    capacityChecker.js 
+    Function to check if warehouse has enough capacity
+
+*/
