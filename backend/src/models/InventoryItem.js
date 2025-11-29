@@ -1,10 +1,11 @@
 /*
     Fields
-        name -> String, required
+        warehouse -> ObjectId -> references Warehouse
+        name -> String, required 
         sku -> String, required, unique per warehouse
         description -> String
         quantity -> Number, required
-        warehouse -> ObjectId -> references Warehouse
+        category
         storageLocation -> String
         createdAt -> Date, default now 
 
