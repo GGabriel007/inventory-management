@@ -14,3 +14,135 @@
         Handle duplicate sku for the same warehouse
 
 */
+
+import mongoose from "mongoose";
+import Warehouse from "./Warehouse";
+
+const inventorySchema = new mongoose.Schema(
+    {
+        name: {
+            type: String, 
+            required: true,
+            trim: true
+        },
+
+        sku: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        description: {
+            type: String,
+            default: ""
+        },
+
+        quantity: {
+            type: Number,
+            required: true,
+            min: [0, "Quantity cannot be negative"]
+        },
+
+        storageLocation: {
+            // Ex "Aisle 3, Shelf B"
+            type: String,
+            default: ""
+        }    
+    },
+    { timestamps: true}
+);
+
+/*
+    PRE-SAVE: Prevent duplicate SKU inside same warehouse
+*/
+
+inventorySchema.pre("save", async function (next) {
+
+    const item = this;
+
+    const duplicate = await mongoose.models.InventoryItem.findOne({
+        sku: item.sku,
+        warehouse: item.warehouse,
+        _id: { $ne: item._id}
+
+    });
+
+    if (duplicate) {
+        return next(
+            new Error(
+                `SKU "${item.sku}" already exxists in this warehouse. Duplicate not allowed.`
+            )
+        );
+    }
+
+    next();
+
+});
+
+/*
+    PRE-SAVE: Adjust Warehouse capacity when quantity changes
+*/
+
+inventorySchema.pre("save", async function (next) {
+    const item = this;
+
+    // Detect if this is a new item or an update
+    const isNew = item.isNew;
+
+    const oldItem = !isNew
+        ? await mongoose.models.InventoryItem.findById(item._id)
+        : null;
+
+    const qtyDifference = isNew
+        ? item.quantity     // adding all qty
+        : item.quantity - oldItem.quantity;
+
+    // If no capacity change, skip
+    if (qtyDifference === 0 ) return next();
+
+    // Get warehouse
+    const warehouse = await Warehouse.findById(item.warehouse);
+    if (!warehouse) return next(new Error("Warehouse not found"));
+
+    // Check capacity
+    if (warehouse.currentCapacity + qtyDifference > warehouse.maxCapacity) {
+        return next(
+            new Error(
+                `Not enough space in warehouse. Adding ${qtyDifference} items exceeds max capacity. `
+            )
+        );
+    }
+
+    // Apply capacity change
+    warehouse.currentCapacity += qtyDifference;
+    await warehouse.save();
+
+    next();
+});
+
+/*
+    STATIC METHOD: Reduce quantity (and capacity)
+*/
+
+inventorySchema.statics.reduceQuantity = async function (itemId, amount) {
+    if (amount <= 0) throw new Error ("Amount must be positive");
+
+    const item = await this.findById(itemId);
+    if (!item) throw new Error ("Item not found");
+
+    if (item.quantity < amount)
+        throw new Error("Not enough items in stock to remove");
+
+    item.quantity -= amount;
+
+    // Update warehouse capacity
+    const warehouse = await Warehouse.findById(item.warehouse);
+    warehouse.currentCapacity -= amount;
+    await warehouse.save();
+
+    return item.save();
+};
+
+const InventoryItem = mongoose.model("InventoryItem", inventorySchema);
+export default InventoryItem;
+

@@ -7,7 +7,7 @@ import Warehouse from "../src/models/Warehouse.js";
 async function run() {
     await mongoose.connect(process.env.MONGO_URI);
 
-    const w = await Warehouse.create({ name: "Test WH", location: "Baltimore", maxCapacity: 100, currentCapacity: 10});
+    const w = await Warehouse.create({ name: "Test WH1", location: "Germantown", maxCapacity: 200, currentCapacity: 2});
     console.log("created:", w);
 
     const inc = await Warehouse.increaseCapacity(w._id, 25);
