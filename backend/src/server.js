@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import warehouseRoutes from "./routes/warehouseRoutes.js";
+import inventoryRoutes from "./routes/inventoryRoutes.js";
+
+
 
 /*
     server.js
@@ -31,3 +35,6 @@ mongoose
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.use("/warehouses", warehouseRoutes);
+app.use("/inventory", inventoryRoutes);
