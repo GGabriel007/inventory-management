@@ -16,7 +16,7 @@
 */
 
 import mongoose from "mongoose";
-import Warehouse from "./Warehouse";
+import Warehouse from "./Warehouse.js";
 
 const inventorySchema = new mongoose.Schema(
     {
@@ -43,39 +43,43 @@ const inventorySchema = new mongoose.Schema(
             min: [0, "Quantity cannot be negative"]
         },
 
+        warehouseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Warehouse",
+            required: true
+        },
+
         storageLocation: {
             // Ex "Aisle 3, Shelf B"
             type: String,
             default: ""
         }    
     },
-    { timestamps: true}
+    { timestamps: true }
 );
 
 /*
     PRE-SAVE: Prevent duplicate SKU inside same warehouse
 */
 
-inventorySchema.pre("save", async function (next) {
+inventorySchema.pre("save", async function () {
 
     const item = this;
 
     const duplicate = await mongoose.models.InventoryItem.findOne({
         sku: item.sku,
-        warehouse: item.warehouse,
-        _id: { $ne: item._id}
-
+        warehouseId: item.warehouseId,
+        _id: { $ne: item._id }
     });
 
     if (duplicate) {
-        return next(
-            new Error(
-                `SKU "${item.sku}" already exxists in this warehouse. Duplicate not allowed.`
-            )
+        throw new Error(
+                `SKU "${item.sku}" already exists in this warehouse. Duplicate not allowed.`
+            
         );
     }
 
-    next();
+    
 
 });
 
@@ -83,7 +87,7 @@ inventorySchema.pre("save", async function (next) {
     PRE-SAVE: Adjust Warehouse capacity when quantity changes
 */
 
-inventorySchema.pre("save", async function (next) {
+inventorySchema.pre("save", async function () {
     const item = this;
 
     // Detect if this is a new item or an update
@@ -98,18 +102,18 @@ inventorySchema.pre("save", async function (next) {
         : item.quantity - oldItem.quantity;
 
     // If no capacity change, skip
-    if (qtyDifference === 0 ) return next();
+    if (qtyDifference === 0 ) return;
 
     // Get warehouse
-    const warehouse = await Warehouse.findById(item.warehouse);
-    if (!warehouse) return next(new Error("Warehouse not found"));
+    const warehouse = await Warehouse.findById(item.warehouseId);
+    if (!warehouse) {
+        throw new Error("Warehouse not found");
+    }
 
     // Check capacity
     if (warehouse.currentCapacity + qtyDifference > warehouse.maxCapacity) {
-        return next(
-            new Error(
+        throw new Error(
                 `Not enough space in warehouse. Adding ${qtyDifference} items exceeds max capacity. `
-            )
         );
     }
 
@@ -117,7 +121,6 @@ inventorySchema.pre("save", async function (next) {
     warehouse.currentCapacity += qtyDifference;
     await warehouse.save();
 
-    next();
 });
 
 /*
@@ -136,7 +139,7 @@ inventorySchema.statics.reduceQuantity = async function (itemId, amount) {
     item.quantity -= amount;
 
     // Update warehouse capacity
-    const warehouse = await Warehouse.findById(item.warehouse);
+    const warehouse = await Warehouse.findById(item.warehouseId);
     warehouse.currentCapacity -= amount;
     await warehouse.save();
 

@@ -28,7 +28,7 @@ async function run() {
             sku: "LT-123",
             description: "Dell XPS 13",
             quantity: 10,
-            warehouse: warehouse._id,
+            warehouseId: warehouse._id,
             storageLocation: "Aisle 1, Shelf A"
         });
         console.log("Created inventory item:", item1);
@@ -40,7 +40,7 @@ async function run() {
                 sku: "LT-123",
                 description: "Another laptop",
                 quantity: 5,
-                warehouse: warehouse._id,
+                warehouseId: warehouse._id,
                 storageLocation: "Aisle 1, Shelf B"
             });
 
@@ -61,7 +61,7 @@ async function run() {
             sku: "LT-123",  // Same SKU but different warehouse
             description: "Same SKU different warehouse",
             quantity: 5,
-            warehouse: warehouseB._id,
+            warehouseId: warehouseB._id,
             storageLocation: "Aisle 2, Shelf A"
 
         });
@@ -70,7 +70,7 @@ async function run() {
 
         // Reduce item quantity
         await InventoryItem.reduceQuantity(item1._id, 5);
-        const updatedItem1 = await InventoryItem.findById(item1_id);
+        const updatedItem1 = await InventoryItem.findById(item1._id);
         const updatedWarehouse = await Warehouse.findById(warehouse._id);
 
         console.log("Updated item quantity:", updatedItem1.quantity);
