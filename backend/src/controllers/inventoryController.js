@@ -7,26 +7,25 @@
 
 import {
     createInventoryItemService,
+    getAllInventoryItemsService,
     getInventoryItemService,
     updateInventoryItemService,
     deleteInventoryItemService,
     getItemsByWarehouseService
 } from "../services/inventoryService.js";
 
-import InventoryItem from "../models/InventoryItem.js";
-
 export const createItem = async (req, res, next) => {
     try {
         const item = await createInventoryItemService(req.body);
         res.status(201).json(item);
     } catch(error) {
-        next(error);       // send to error handler
+        next(error);     
     }
 };
 
 export const getItems = async (req, res, next) => {
     try {
-        const items = await InventoryItem.find().populate("warehouse");
+        const items = await getAllInventoryItemsService();
         res.json(items);
     }   catch(error) {
         next(error);
@@ -53,14 +52,14 @@ export const updateItem = async (req, res, next) => {
 
 export const deleteItem = async (req, res, next) => {
     try {
-        const message = await deleteInventoryItemService(req.params.id);
-        res.json({ message: "Item deleted successfully"});
+        await deleteInventoryItemService(req.params.id);
+        res.json({ message: "Item deleted successfully" });
     } catch (error) {
         next(error);
     }
 };
 
-// Get items by Warehouse ID
+
 export const getItemsByWarehouse = async (req, res, next) => {
     try {
         const items = await getItemsByWarehouseService(req.params.warehouseId);

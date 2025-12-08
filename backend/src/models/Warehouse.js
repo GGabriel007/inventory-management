@@ -41,7 +41,7 @@ const warehouseSchema = new Schema (
         currentCapacity: {
             type: Number,
             default: 0,
-            min: [0, "Current capacity cannot be negative"],
+            immutable: true,
         },
         meta: {
             // optional free-form metadata if I want like manage, phone etc.

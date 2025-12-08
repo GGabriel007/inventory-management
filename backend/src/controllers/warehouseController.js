@@ -11,12 +11,12 @@ import {
     deleteWarehouseService
 } from "../services/warehouseService.js";
 
-export const createWarehouse = async (req, res) => {
+export const createWarehouse = async (req, res, next) => {
     try {
         const warehouse = await createWarehouseService(req.body);
         res.status(201).json(warehouse);
     } catch (error) {
-        res.status(400).json({ error: error.message});
+        next(error);
     }
 };
 
@@ -25,16 +25,16 @@ export const getWarehouses = async (req, res) => {
         const warehouses = await getAllWarehousesService();
         res.status(200).json(warehouses);
     } catch (error) {
-        res.status(500).json({ error: error.message});
+        next(error);
     }
 };
 
-export const getWarehouseById = async (req, res) => {
+export const getWarehouseById = async (req, res, next) => {
     try {
         const warehouse = await getWarehouseByIdService(req.params.id);
         res.json(warehouse);
     } catch (error) {
-        res.status(404).json({ error: error.message});
+        next(error);
     }
 };
 
@@ -47,11 +47,11 @@ export const updateWarehouse = async (req, res) => {
     }
 };
 
-export const deleteWarehouse = async (req, res) => {
+export const deleteWarehouse = async (req, res, next) => {
     try {
         await deleteWarehouseService(req.params.id);
         res.json({ message: "Warehouse deleted successfully" });
     } catch (error) {
-        res.status(404).json({ error: error.message});
+        next();
     }
 };

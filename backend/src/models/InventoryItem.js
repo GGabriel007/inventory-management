@@ -43,14 +43,13 @@ const inventorySchema = new mongoose.Schema(
             min: [0, "Quantity cannot be negative"]
         },
 
-        warehouseId: {
+        warehouse: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Warehouse",
             required: true
         },
 
         storageLocation: {
-            // Ex "Aisle 3, Shelf B"
             type: String,
             default: ""
         }    
@@ -68,7 +67,7 @@ inventorySchema.pre("save", async function () {
 
     const duplicate = await mongoose.models.InventoryItem.findOne({
         sku: item.sku,
-        warehouseId: item.warehouseId,
+        warehouseId: item.warehouse,
         _id: { $ne: item._id }
     });
 
@@ -105,7 +104,7 @@ inventorySchema.pre("save", async function () {
     if (qtyDifference === 0 ) return;
 
     // Get warehouse
-    const warehouse = await Warehouse.findById(item.warehouseId);
+    const warehouse = await Warehouse.findById(item.warehouse);
     if (!warehouse) {
         throw new Error("Warehouse not found");
     }
@@ -123,6 +122,41 @@ inventorySchema.pre("save", async function () {
 
 });
 
+
+/*
+    PRE-DELETE: Adjust warehouse capacity when an item is deleted
+*/
+inventorySchema.pre("deleteOne", { document: true, query: false}, async function() {
+
+    const item = this;
+
+    const warehouse = await Warehouse.findById(item.warehouse);
+    if (!warehouse) throw new Error("Warehouse not found");
+
+    warehouse.currentCapacity -= item.quantity;
+    if (warehouse.currentCapacity < 0) warehouse.currentCapacity = 0;
+
+    await warehouse.save();
+});
+
+
+/*
+    PRE-DELETE: Adjust Warehouser capacity when deleting via findOneAndDelete
+*/
+inventorySchema.pre("findOneAndDelete", async function () {
+    const item = await this.model.findOne(this.getQuery());
+    if (!item) return;
+
+    const warehouse = await Warehouse.findById(item.warehouse);
+    if (!warehouse) throw new Error ("Warehouse not found");
+
+    warehouse.currentCapacity -= item.quantity;
+    if (warehouse.currentCapacity < 0) warehouse.currentCapacity = 0;
+
+    await warehouse.save();
+});
+
+
 /*
     STATIC METHOD: Reduce quantity (and capacity)
 */
@@ -139,7 +173,7 @@ inventorySchema.statics.reduceQuantity = async function (itemId, amount) {
     item.quantity -= amount;
 
     // Update warehouse capacity
-    const warehouse = await Warehouse.findById(item.warehouseId);
+    const warehouse = await Warehouse.findById(item.warehouse);
     warehouse.currentCapacity -= amount;
     await warehouse.save();
 

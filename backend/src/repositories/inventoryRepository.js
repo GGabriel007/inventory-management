@@ -7,21 +7,32 @@
 import InventoryItem from "../models/InventoryItem.js";
 import Warehouse from "../models/Warehouse.js";
 
-export const createItem = (data) => InventoryItem.create(data);
+// Create
+export const createItem = async (data) => 
+    await InventoryItem.create(data);
 
-export const findItemId = (id) => InventoryItem.findById(id);
+// Read
+export const findItemId = async (id) => 
+    await InventoryItem.findById(id);
 
-export const findItemsByWarehouse = (warehouseId) => 
-    InventoryItem.find({ warehouse: warehouseId });
+export const findItemsByWarehouse = async (warehouseId) => 
+    await InventoryItem.find({ warehouse: warehouseId });
 
-export const updateItem = (id, data) => 
-    InventoryItem.findByIdAndUpdate(id, data, { new: true });
+export const findAllItems = async () => 
+    await InventoryItem.find().populate("warehouse");
 
-export const deleteItem = (id) => InventoryItem.findByIdAndDelete(id);
+// Update
+export const updateItem = async (id, data) => 
+    await InventoryItem.findByIdAndUpdate(id, data, { new: true });
 
-export const findDuplicateSKU = (sku, WarehouseId, excludeId) =>
-    InventoryItem.findOne({
+// Delete
+export const deleteItem = async (id) => 
+    await InventoryItem.findByIdAndDelete(id);
+
+// Check for duplicate SKU 
+export const findDuplicateSKU = async (sku, warehouseId, excludeId = null) =>
+    await InventoryItem.findOne({
         sku,
         warehouse: warehouseId,
-        _id: { $ne: exlucdeId },
+        ...(excludeId ? { _id: { $ne: excludeId } }: {}),
     });

@@ -6,11 +6,12 @@
 
 import Warehouse from "../models/Warehouse.js";
 
-export const createWarehouse = (date) => Warehouse.create(data);
+export const createWarehouse = (data) => Warehouse.create(data);
+
+export const findAllWarehouses = () => Warehouse.find();
 
 export const findWarehouseById = (id) => Warehouse.findById(id);
 
-export const findAllWarehouses = () => Warehouse.find();
 
 export const updateWarehouse = (id, data) => 
     Warehouse.findByIdAndUpdate(id, data, { new: true});
