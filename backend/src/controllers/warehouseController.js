@@ -1,15 +1,19 @@
 /*
     warehouseController.js
-    all warehouse logic
-
+    Only handles express req/res and passes logic to services
 */
 
-import Warehouse from "../models/Warehouse.js";
+import {
+    createWarehouseService,
+    getAllWarehousesService,
+    getWarehouseByIdService,
+    updateWarehouseService,
+    deleteWarehouseService
+} from "../services/warehouseService.js";
 
 export const createWarehouse = async (req, res) => {
     try {
-        const warehouse = new Warehouse(req.body);
-        await warehouse.save();
+        const warehouse = await createWarehouseService(req.body);
         res.status(201).json(warehouse);
     } catch (error) {
         res.status(400).json({ error: error.message});
@@ -18,7 +22,7 @@ export const createWarehouse = async (req, res) => {
 
 export const getWarehouses = async (req, res) => {
     try {
-        const warehouses = await Warehouse.find();
+        const warehouses = await getAllWarehousesService();
         res.status(200).json(warehouses);
     } catch (error) {
         res.status(500).json({ error: error.message});
@@ -27,39 +31,27 @@ export const getWarehouses = async (req, res) => {
 
 export const getWarehouseById = async (req, res) => {
     try {
-        const warehouse = await Warehouse.findById(req.params.id);
-        if (!warehouse) return res.status(404).json({ error: "Warehouse not found "});
-    
-    
+        const warehouse = await getWarehouseByIdService(req.params.id);
         res.json(warehouse);
     } catch (error) {
-        res.status(400).json({ error: "Invalid ID format"});
+        res.status(404).json({ error: error.message});
     }
 };
 
 export const updateWarehouse = async (req, res) => {
     try {
-        const warehouse = await Warehouse.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true}
-        );
-
-        if (!warehouse) return res.status(404).json({ error: "Warehouse not found"});
-    
+        const warehouse = await updateWarehouseService(req.params.id, req.body);
         res.json(warehouse);
-    }   catch(error) {
-        res.status(400).json({ error: error.message });
+    } catch (error) {
+        res.status(400).json({ error: error.message});
     }
 };
 
 export const deleteWarehouse = async (req, res) => {
     try {
-        const warehouse = await Warehouse.findByIdAndDelete(req.params.id);
-        if (!warehouse) return res.status(404).json({ error: "Warehouse not found"});
-
-        res.json({ message: "Warehouse deleted successfully"});
+        await deleteWarehouseService(req.params.id);
+        res.json({ message: "Warehouse deleted successfully" });
     } catch (error) {
-        res.status(400).json({ error: error.message});
+        res.status(404).json({ error: error.message});
     }
 };

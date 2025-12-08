@@ -1,67 +1,73 @@
-/*
-    inventoryController.js 
-    all inventory logic, including edge cases
+/**
+ * inventoryController.js
+ * 
+ *  Only handles express req/res and passes logic to services
+ * 
+ */
 
-*/
+import {
+    createInventoryItemService,
+    getInventoryItemService,
+    updateInventoryItemService,
+    deleteInventoryItemService,
+    getItemsByWarehouseService
+} from "../services/inventoryService.js";
 
 import InventoryItem from "../models/InventoryItem.js";
 
-export const createItem = async (req, res) => {
+export const createItem = async (req, res, next) => {
     try {
-        const item = await InventoryItem.create(req.body);
+        const item = await createInventoryItemService(req.body);
         res.status(201).json(item);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+    } catch(error) {
+        next(error);       // send to error handler
     }
 };
 
-export const getItems = async (req, res) => {
+export const getItems = async (req, res, next) => {
     try {
-        const items = await InventoryItem.find().populate("warehouseId");
+        const items = await InventoryItem.find().populate("warehouse");
         res.json(items);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    }   catch(error) {
+        next(error);
     }
 };
 
-export const getItemById = async (req, res) => {
+export const getItemById = async (req, res, next) => {
     try {
-        const item = await InventoryItem.findById(req.params.id).populate("warehouseId");
-        if (!item) return res.status(404).json({ error: "Item not found" });
-
+        const item = await getInventoryItemService(req.params.id);
         res.json(item);
     } catch (error) {
-        res.status(400).json({ error: "Invalid ID format"});
+        next(error);
     }
 };
 
-export const updateItem = async (req, res) => {
+export const updateItem = async (req, res, next) => {
     try {
-        const item = await InventoryItem.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new : true, runValidators: true}
-        );
-
-        if (!item) return res.status(404).json({ error: "Item not found" });
-
+        const item = await updateInventoryItemService(req.params.id, req.body);
         res.json(item);
-    } catch (error) {
-        res.status(400).json({ error: error.message});
+    } catch(error) {
+        next(error);
     }
 };
 
-export const deleteItem = async (req, res) => {
+export const deleteItem = async (req, res, next) => {
     try {
-        const item = await InventoryItem.findById(req.params.id);
-
-        if (!item)
-            return res.status(404).json({ error: "Item not found"});
-
-        await item.deleteOne();     // capacity should update in pre-delete hook
-
-        res.json({ message: "Item deleted successfully" });
+        const message = await deleteInventoryItemService(req.params.id);
+        res.json({ message: "Item deleted successfully"});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
+
+// Get items by Warehouse ID
+export const getItemsByWarehouse = async (req, res, next) => {
+    try {
+        const items = await getItemsByWarehouseService(req.params.warehouseId);
+        res.json(items);
+    }   catch (error) {
+        next(error);
+    }
+};
+
+
