@@ -36,12 +36,9 @@ const warehouseSchema = new Schema (
             required: [true, "Max capacity is required"],
             min: [0, "Max capacity cannot be negative"],
         },
-        // currentCapacity tracks the total quantity stored.
-        // Keep it updated via controller logic 
         currentCapacity: {
             type: Number,
             default: 0,
-            immutable: true,
         },
         meta: {
             // optional free-form metadata if I want like manage, phone etc.

@@ -14,6 +14,10 @@ import {
     getItemsByWarehouseService
 } from "../services/inventoryService.js";
 
+
+/*
+    CREATE ITEM
+*/
 export const createItem = async (req, res, next) => {
     try {
         const item = await createInventoryItemService(req.body);
@@ -23,15 +27,22 @@ export const createItem = async (req, res, next) => {
     }
 };
 
+/*
+    GET ALL ITEMS
+*/
 export const getItems = async (req, res, next) => {
     try {
         const items = await getAllInventoryItemsService();
         res.json(items);
-    }   catch(error) {
+    }  catch(error) {
         next(error);
     }
 };
 
+
+/*
+    GET ITEM BY ID
+*/
 export const getItemById = async (req, res, next) => {
     try {
         const item = await getInventoryItemService(req.params.id);
@@ -41,6 +52,9 @@ export const getItemById = async (req, res, next) => {
     }
 };
 
+/*
+    UPDATE ITEM
+*/
 export const updateItem = async (req, res, next) => {
     try {
         const item = await updateInventoryItemService(req.params.id, req.body);
@@ -50,18 +64,31 @@ export const updateItem = async (req, res, next) => {
     }
 };
 
+
+/*
+    DELETE ITEM
+*/
 export const deleteItem = async (req, res, next) => {
     try {
         await deleteInventoryItemService(req.params.id);
-        res.json({ message: "Item deleted successfully" });
+        res.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
         next(error);
     }
 };
 
 
+/*
+    GET ITEMS BY WAREHOUSE
+*/
 export const getItemsByWarehouse = async (req, res, next) => {
     try {
+        if(!req.params.warehouseId) {
+            return res
+                .status(400)
+                .json({ error: "warehouseId parameter is required"});
+        }
+
         const items = await getItemsByWarehouseService(req.params.warehouseId);
         res.json(items);
     }   catch (error) {
