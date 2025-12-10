@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import { Link } from "react-router-dom";
 
+// List of warehouses + Add button
+
 export default function WarehousePage() {
     const [warehouses, setWarehouses] = useState([]);
 
@@ -14,6 +16,10 @@ export default function WarehousePage() {
     return (
         <div>
             <h1>Warehouses</h1>
+
+            <Link to="/warehouses/create">
+                <button style={{ marginBottom: "20px"}}>+ Add Warehouse</button>
+            </Link>
 
             {warehouses.map(w => (
             <Link

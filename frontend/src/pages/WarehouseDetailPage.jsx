@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 
+// Warehouse details + Edit + Delete
+
 export default function WarehouseDetailPage() {
     const { id } = useParams();
     const [warehouse, setWarehouse] = useState(null);
