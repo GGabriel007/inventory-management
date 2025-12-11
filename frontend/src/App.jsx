@@ -5,13 +5,15 @@ import WarehouseDetailPage from "./pages/WarehouseDetailPage";
 import InventoryPage from "./pages/InventoryPage";
 import InventoryDetailPage from "./pages/InventoryDetailPage";
 import Navbar from "./components/layout/Navbar";
-import WarehouseCreatePage from "./pages/WarehouseCreatePage";
+import WarehouseEditPage from "./pages/WarehouseEditPage";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (    
     <div>
       <Navbar />
       
+      <Toaster  />
         <Routes>
 
         {/* HOME PAGE */}
@@ -22,7 +24,7 @@ function App() {
         <Route path="/warehouses" element={<WarehousePage />} />
         <Route path="/warehouses/:id" element={<WarehouseDetailPage />} />
 
-        <Route path="/warehouses/create" element={<WarehouseCreatePage />} />
+        <Route path="/warehouses/:id/edit" element={<WarehouseEditPage />} />
 
         {/* Inventory Routes */}
         <Route path="/inventory" element={<InventoryPage />} />

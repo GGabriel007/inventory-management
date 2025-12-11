@@ -23,6 +23,8 @@ export default function WarehouseCreatePage() {
         });
     }
 
+
+
     async function handleSubmit(e) {
         e.preventDefault();
         setError("");
@@ -70,6 +72,19 @@ export default function WarehouseCreatePage() {
                         onChange={handleChange}
                         required
                         />
+                </div>
+
+                <div style={{ marginBottom: "15px"}}>
+                    <label>Max Capacity:</label><br/>
+
+                    <input
+                    type="number"
+                    name="maxCapacity"
+                    value={formData.maxCapacity}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                     />
                 </div>
 
                 <button type="submit">Create Warehouse</button>
