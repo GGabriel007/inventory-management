@@ -1,101 +1,125 @@
-// WarehouseCreatePage.jsx
-// Form to create new warehouse
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
+import toast from "react-hot-toast";
+import Select from "react-select";
+import { State, City } from "country-state-city";
+import { useNavigate } from "react-router-dom";
 
-export default function WarehouseCreatePage() {
-    const navigate = useNavigate();
+function WarehouseCreatePage() {
+  const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
-        name: "",
-        location: "",
-        maxCapacity: "",
-    });
+  const [name, setName] = useState("");
+  const [state, setState] = useState(null);
+  const [city, setCity] = useState(null);
+  const [maxCapacity, setMaxCapacity] = useState("");
 
-    const [error, setError] = useState("");
+  // Convert library state list to react-select format
+  const stateOptions = State.getStatesOfCountry("US").map((s) => ({
+    value: s.isoCode,
+    label: s.name,
+  }));
 
-    function handleChange(e) {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+  // Dynamically provide cities for chosen state
+  const cityOptions =
+    state?.value
+      ? City.getCitiesOfState("US", state.value).map((c) => ({
+          value: c.name,
+          label: c.name,
+        }))
+      : [];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!state || !city) {
+      toast.error("Please select both state and city.");
+      return;
     }
 
+    const location = `${city.label}, ${state.label}`;
 
+    try {
+      const response = await axiosClient.post("/warehouses", {
+        name,
+        location,
+        maxCapacity: parseInt(maxCapacity),
+      });
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setError("");
+      toast.success("Warehouse created successfully!");
 
-        try {
-            await axiosClient.post("/warehouses", {
-                name: formData.name,
-                location: formData.location,
-                maxCapacity: Number(formData.maxCapacity),
-            });
+    //    Extract the new warehouse ID
+    const warehouseId = response.data.id || response.data._id;
 
-            // Redirect user back to warehouses page
-            navigate("/warehouses");
-        
-        } catch (err){
-            setError("Error creating warehouse. Please try again.");
-            console.error(err);
-        }
+    // Redirect to detail page
+    navigate(`/warehouses/${warehouseId}`);
+
+      // Clear form
+      setName("");
+      setState(null);
+      setCity(null);
+      setMaxCapacity("");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error creating warehouse.");
     }
+  };
 
-    return (
-        <div style={{ maxWidth: "600px", margin:"0 auto"}}>
-            <h1>Create New Warehouses</h1>
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Create Warehouse</h2>
 
-            {error && <p style={{ color: "red"}}>error</p>}
+      <form onSubmit={handleSubmit}>
+        {/* NAME */}
+        <label>Warehouse Name:</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Choose a name for the Warehouse"
+          required
+        />
 
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: "15px"}}>
-                    <label>Name:</label><br />
-                    <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange = {handleChange}
-                        required
-                        />
-                </div>
+        {/* STATE */}
+        <label>Select State:</label>
+        <Select
+          options={stateOptions}
+          value={state}
+          onChange={(selected) => {
+            setState(selected);
+            setCity(null); // Reset city when state changes
+          }}
+          placeholder="Choose a state..."
+        />
 
-                <div style={{ marginBottom: "15px"}}>
-                    <label>Location</label> <br />
-                    <input 
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleChange}
-                        required
-                        />
-                </div>
+        {/* CITY */}
+        <label>Select City:</label>
+        <Select
+          options={cityOptions}
+          value={city}
+          onChange={(selected) => setCity(selected)}
+          placeholder={
+            state ? "Choose a city..." : "Select a state first..."
+          }
+          isDisabled={!state}
+        />
 
-                <div style={{ marginBottom: "15px"}}>
-                    <label>Max Capacity:</label><br/>
+        {/* MAX CAPACITY */}
+        <label>Max Capacity:</label>
+        <input
+          type="number"
+          value={maxCapacity}
+          onChange={(e) => setMaxCapacity(e.target.value)}
+          placeholder="Choose the max capacity..."
+          required
+        />
 
-                    <input
-                    type="number"
-                    name="maxCapacity"
-                    value={formData.maxCapacity}
-                    onChange={handleChange}
-                    required
-                    min="1"
-                     />
-                </div>
+        <br />
+        <br />
 
-                <button type="submit">Create Warehouse</button>
-                <button 
-                    type="button"
-                    onClick={() => navigate("/warehouses")}
-                    style={{ marginLeft: "10px"}}
-                    >
-                        Cancel
-                    </button>
-            </form>
-        </div>
-    );
+        <button type="submit">Create Warehouse</button>
+      </form>
+    </div>
+  );
 }
+
+export default WarehouseCreatePage;

@@ -17,7 +17,7 @@ export default function WarehousePage() {
         <div>
             <h1>Warehouses</h1>
 
-            <Link to="/warehouses/create">
+            <Link to="/warehouses/new">
                 <button style={{ marginBottom: "20px"}}>+ Add Warehouse</button>
             </Link>
 

@@ -155,12 +155,22 @@ export default function WarehouseDetailPage() {
                     Edit Warehouse
                 </button>
 
+            <button 
+                    type="button"
+                    onClick={() => navigate("/warehouses")}
+                    style={{ marginLeft: "10px", marginRight: "20px"}}
+                    >
+                        Cancel
+                    </button>
+
                 <button
                     onClick={openDeleteToast}
                     style={{ background: "red", color: "white"}}
                     >
                         Delete Warehouse
                     </button>
+
+                
 
                     {/* Showing confirmation modal only when needed */}
                     {showDeleteModal && (
