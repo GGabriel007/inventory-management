@@ -1,10 +1,8 @@
-// Form to edit warehouse
-
+// /pages/WarehouseEditPage.jsx
 import { useParams, useNavigate} from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import toast from "react-hot-toast";
-
 import Select from "react-select";
 import { State, City } from "country-state-city";
 
@@ -19,50 +17,47 @@ export default function WarehouseEditPage() {
         currentCapacity: 0
     });
 
-    const[selectedState, setSelectedState] = useState(null);
-    const[selectedCity, setSelectedCity] = useState(null);
-    const[cityOptions, setCityOptions] = useState([]);
-
+    const [selectedState, setSelectedState] = useState(null);
+    const [selectedCity, setSelectedCity] = useState(null);
+    const [cityOptions, setCityOptions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-    // Getting static state options onnce
+    // Static state options
     const stateOptions = State.getStatesOfCountry("US").map(s => ({
         value: s.isoCode,
         label: s.name
-    }))
+    }));
 
-
-    // Fetching existing warehouse info
+    // Fetch existing warehouse info
     useEffect(() => {
         async function fetchWarehouse() {
             try{
                 const response = await axiosClient.get(`/warehouses/${id}`);
                 const data = response.data;
                 
-                const fullLocation = response.data.location || "";
+                const fullLocation = data.location || "";
                 const [cityPart, statePart] = fullLocation.includes(",")
                     ? fullLocation.split(",").map(part => part.trim())
                     : ["", ""];
 
-                // Find the state option
+                // Pre-fill Select components
                 const stateOption = stateOptions.find(s => s.label === statePart) || null;
                 setSelectedState(stateOption);
 
                 if (stateOption) {
-                    //  Fetch city options based on the state's ISO code
                     const cities = City.getCitiesOfState("US", stateOption.value);
                     const mappedCities = cities.map(c => ({ value: c.name, label: c.name }));
                     setCityOptions(mappedCities);
 
-                    // Find the city option
                     const cityOption = mappedCities.find(c => c.label === cityPart) || null;
                     setSelectedCity(cityOption);
                 }
 
                 setFormData({
-                    name: response.data.name,
-                    location: response.data.location,
-                    maxCapacity: response.data.maxCapacity,
+                    name: data.name,
+                    location: data.location,
+                    maxCapacity: data.maxCapacity,
                     currentCapacity: data.currentCapacity || 0
                 });
 
@@ -73,59 +68,42 @@ export default function WarehouseEditPage() {
                 setLoading(false);
             }
         }
-
         fetchWarehouse();
-
     }, [id]);
 
-    // Handle input change
+    // Handle standard inputs
     function handleChange(e) {
         const {name, value} = e.target;
-        
-        // Input validation for Max Capacity
         if (name === "maxCapacity") {
-            const numValue = parseFloat(value);
-
-            // Preventing negative values from being entered
-            if (value !== "" && numValue < 0) {
-                toast.error("Max capacity cannot be negative");
-                return;
-            }
-
-            setFormData((prev) => ({ ... prev, [name]: value}));
-            return;
+            // No negative values allowed in state
+            if (value < 0) return; 
         }
-
         setFormData((prev) => ({ ...prev, [name]: value}));
     }
 
-
-    // Handle state selection
+    // Handle State selection
     function handleStateChange(selected) {
         setSelectedState(selected);
-        setSelectedCity(null); // reset city
+        setSelectedCity(null); // Reset city
 
         if(selected) {
-        const cities = City.getCitiesOfState("US", selected.value);
-        const mappedCities = cities.map((c) => ({
-            value: c.name,
-            label: c.name,
-        }));
-        setCityOptions(mappedCities);
-    } else {
-        setCityOptions([]);
-    }
-        // Update location only when city is selected
-        setFormData((prev) => ({
-            ...prev,
-            location: "",
-        }));
+            const cities = City.getCitiesOfState("US", selected.value);
+            const mappedCities = cities.map((c) => ({
+                value: c.name,
+                label: c.name,
+            }));
+            setCityOptions(mappedCities);
+        } else {
+            setCityOptions([]);
+        }
+        // Clear location string until city is selected
+        setFormData((prev) => ({ ...prev, location: "" }));
     }
 
+    // Handle City selection
     function handleCityChange(selected) {
         setSelectedCity(selected);
         if(selected && selectedState) {
-            // Update formData.location dynamically when city is selected
             setFormData((prev) => ({
                 ...prev,
                 location: `${selected.label}, ${selectedState.label}`,
@@ -133,112 +111,282 @@ export default function WarehouseEditPage() {
         }
     }
 
-    // Save update
-    async function handleSave() {
-
+    // Save Update
+    async function handleSave(e) {
+        e.preventDefault();
+        
         const newMaxCapacity = parseInt(formData.maxCapacity);
-        const currentCapacity = formData.currentCapcity;
+        const currentUsage = formData.currentCapacity;
 
-        if (newMaxCapacity < currentCapacity) {
-            toast.error(`The new Max Capacity (${newMaxCapacity}) cannot be less than the Current Capacity (${currentCapacity}).`);
+        if (newMaxCapacity < currentUsage) {
+            toast.error(`Capacity too low! Current usage is ${currentUsage}.`);
             return;
         }
 
+        if (!selectedCity || !selectedState) {
+            toast.error("Please select a valid location.");
+            return;
+        }
+
+        setSaving(true);
+
         try {
-
-            const finalLocation = selectedCity && selectedState
-                ? `${selectedCity.label}, ${selectedState.label}`
-                : formData.location;
-
+            const finalLocation = `${selectedCity.label}, ${selectedState.label}`;
+            
             const dataToUpdate = {
                 name: formData.name,
                 location: finalLocation,
-                maxCapacity: parseInt(formData.maxCapacity)
-            }
+                maxCapacity: newMaxCapacity
+            };
 
             await axiosClient.put(`/warehouses/${id}`, dataToUpdate);
             toast.success("Warehouse updated successfully!");
-
-            //  Redirect to the warehouse details page
             navigate(`/warehouses/${id}`);
         } catch (error) {
             console.error("Error updating warehouse:", error);
-            toast.error("Erro updating warehouse.");
+            const msg = error.response?.data?.message || "Error updating warehouse.";
+            toast.error(msg);
+        } finally {
+            setSaving(false);
         }
     }
 
-    if (loading) return <h2>Loading warehouse...</h2>;
+    // Select Styles (to match input fields)
+    const customSelectStyles = {
+        control: (provided, state) => ({
+            ...provided,
+            padding: '5px',
+            borderRadius: '8px',
+            borderColor: state.isFocused ? '#1976d2' : '#d1d5db',
+            boxShadow: state.isFocused ? '0 0 0 1px #1976d2' : 'none',
+            backgroundColor: '#f9fafb',
+            '&:hover': { borderColor: '#1976d2' }
+        }),
+    };
+
+    if (loading) return <div style={styles.loading}>Loading warehouse details...</div>;
 
     return (
-        <div>
-            <h1>Edit Warehouse</h1>
+        <div style={styles.pageBackground}>
+            <div style={styles.card}>
+                
+                <div style={styles.header}>
+                    <h1 style={styles.title}>Edit Warehouse</h1>
+                    <p style={styles.subtitle}>Update details for <strong>{formData.name}</strong></p>
+                </div>
 
-            <form onSubmit={(e) => {e.preventDefault(); handleSave();}}>
-            <label>Name</label>
-            {/* Name Input */}
-            <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                />
-
-                <br/><br/>
-
-                {/* State DROPDOWN */}
-                <label>State</label>
-                <Select
-                    options={stateOptions}
-                    value={selectedState}
-                    onChange={handleStateChange}
-                    placeholder="Select a state"
+                <form onSubmit={handleSave} style={styles.form}>
                     
-                    />
+                    {/* Name */}
+                    <div style={styles.formGroup}>
+                        <label style={styles.label}>Warehouse Name</label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            style={styles.input}
+                            required
+                        />
+                    </div>
 
-                    <br /><br />
+                    {/* Location Grid */}
+                    <div style={styles.gridRow}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.label}>State</label>
+                            <Select
+                                options={stateOptions}
+                                value={selectedState}
+                                onChange={handleStateChange}
+                                placeholder="Select State..."
+                                styles={customSelectStyles}
+                            />
+                        </div>
 
-                {/* CITY DROPDOWN */}
-                <Select
-                    value={selectedCity}
-                    onChange={handleCityChange}
-                    options={cityOptions}
-                    placeholder="Select a City"
-                    isDisabled={!selectedState}
-                />
-                <br />
+                        <div style={styles.formGroup}>
+                            <label style={styles.label}>City</label>
+                            <Select
+                                value={selectedCity}
+                                onChange={handleCityChange}
+                                options={cityOptions}
+                                placeholder={selectedState ? "Select City..." : "Select State first..."}
+                                isDisabled={!selectedState}
+                                styles={customSelectStyles}
+                            />
+                        </div>
+                    </div>
 
-                {/* SHOWING THE FULL LOCATION VALUE */}
-                <label>Location:</label>
-                <input 
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    disabled
-                />
+                    {/* Read-Only Location String */}
+                    <div style={styles.formGroup}>
+                        <label style={styles.label}>Formatted Location (Auto-generated)</label>
+                        <input 
+                            type="text"
+                            value={formData.location}
+                            readOnly
+                            disabled
+                            style={styles.inputDisabled}
+                        />
+                    </div>
 
-                <br/><br/>
+                    {/* Capacity Section */}
+                    <div style={styles.capacitySection}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.label}>
+                                Max Capacity 
+                                <span style={styles.infoBadge}>Current Usage: {formData.currentCapacity}</span>
+                            </label>
+                            <input 
+                                type="number"
+                                name="maxCapacity"
+                                value={formData.maxCapacity}
+                                onChange={handleChange}
+                                min={formData.currentCapacity}
+                                style={styles.input}
+                                required
+                            />
+                            <small style={styles.helperText}>
+                                Cannot be lower than the current inventory usage ({formData.currentCapacity}).
+                            </small>
+                        </div>
+                    </div>
 
-                <label>Max Capacity (Current: {formData.currentCapacity || 0}) </label>
-                <input 
-                    type="number"
-                    name="maxCapacity"
-                    value={formData.maxCapacity}
-                    onChange={handleChange}
-                    min={formData.currentCapacity || 0}
-                />
-
-                <br/><br/>
-
-                <button>Save</button>
-                <button 
-                    onClick={() => navigate(`/warehouses/${id}`)}
-                    style={{ marginLeft: "10px"}}
-                    type="button"
-                    >
-                        Cancel
-                    </button>
+                    {/* Buttons */}
+                    <div style={styles.buttonGroup}>
+                        <button 
+                            type="button"
+                            onClick={() => navigate(`/warehouses/${id}`)}
+                            style={styles.cancelButton}
+                            disabled={saving}
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit" 
+                            style={saving ? styles.buttonDisabled : styles.button}
+                            disabled={saving}
+                        >
+                            {saving ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
                 </form>
             </div>
-        );
-    }
+        </div>
+    );
+}
+
+// --- STYLES ---
+const styles = {
+    pageBackground: {
+        backgroundColor: "#f4f6f8",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        paddingTop: "60px",
+        paddingBottom: "60px",
+        fontFamily: "'Segoe UI', sans-serif",
+    },
+    card: {
+        backgroundColor: "#fff",
+        width: "100%",
+        maxWidth: "600px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+        padding: "40px",
+        border: "1px solid #eaeaea",
+    },
+    header: { textAlign: "center", marginBottom: "30px" },
+    title: { fontSize: "28px", color: "#1a1a1a", margin: "0 0 10px 0", fontWeight: "700" },
+    subtitle: { color: "#666", fontSize: "16px", margin: 0 },
+    loading: { textAlign: "center", padding: "50px", fontSize: "1.2rem", color: "#666" },
+    
+    form: { display: "flex", flexDirection: "column", gap: "24px" },
+    formGroup: { display: "flex", flexDirection: "column", gap: "8px", flex: 1 },
+    gridRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
+    
+    label: {
+        fontSize: "14px",
+        fontWeight: "600",
+        color: "#374151",
+        letterSpacing: "0.3px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+    },
+    input: {
+        padding: "12px 16px",
+        borderRadius: "8px",
+        border: "1px solid #d1d5db",
+        fontSize: "16px",
+        outline: "none",
+        transition: "all 0.2s",
+        backgroundColor: "#f9fafb",
+    },
+    inputDisabled: {
+        padding: "12px 16px",
+        borderRadius: "8px",
+        border: "1px solid #e5e7eb",
+        fontSize: "16px",
+        backgroundColor: "#f3f4f6",
+        color: "#6b7280",
+        cursor: "not-allowed"
+    },
+    
+    capacitySection: {
+        backgroundColor: "#f0f9ff",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "1px solid #bae6fd",
+    },
+    infoBadge: {
+        fontSize: "12px",
+        backgroundColor: "#e0f2fe",
+        color: "#0284c7",
+        padding: "2px 8px",
+        borderRadius: "12px",
+        fontWeight: "600",
+    },
+    helperText: {
+        fontSize: "13px",
+        color: "#64748b",
+        marginTop: "4px",
+    },
+
+    buttonGroup: { display: "flex", gap: "15px", marginTop: "10px" },
+    button: {
+        flex: 1,
+        padding: "14px",
+        background: "#1976d2",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "16px",
+        transition: "background 0.2s",
+        boxShadow: "0 2px 4px rgba(25, 118, 210, 0.2)",
+    },
+    buttonDisabled: {
+        flex: 1,
+        padding: "14px",
+        background: "#90caf9",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "not-allowed",
+        fontWeight: "600",
+        fontSize: "16px",
+    },
+    cancelButton: {
+        flex: 1,
+        padding: "14px",
+        background: "#fff", 
+        color: "#555",
+        border: "1px solid #d1d5db",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "16px",
+        transition: "background 0.2s",
+    },
+};

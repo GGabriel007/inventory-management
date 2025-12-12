@@ -279,7 +279,7 @@ export const updateInventoryItemService = async (id, data) => {
 */
 export const deleteInventoryItemService = async (id) => {
     const item = await findItemId(id);
-    if (!item) throw new Error("Item not found");
+    if (!item) throw new Error(`Item not found ${item}`);
     
     // Release capacity
     // Ensure we don't go below zero (handled by repo logic or check here)

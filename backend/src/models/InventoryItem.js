@@ -8,15 +8,11 @@
         category
         storageLocation -> String
         createdAt -> Date, default now 
-
-    Edge Cases to Consider:
-        Ensure quantity + warehouse.currenty <= warehouse.capacity
-        Handle duplicate sku for the same warehouse
-
 */
 
 import mongoose from "mongoose";
-import Warehouse from "./Warehouse.js";
+
+// Note: Warehouse import is not needed here anymore as capacity logic is in the Service.
 
 const inventorySchema = new mongoose.Schema(
     {
@@ -59,127 +55,35 @@ const inventorySchema = new mongoose.Schema(
 
 /*
     PRE-SAVE: Prevent duplicate SKU inside same warehouse
+    FIX: Removed 'next' parameter. using async/throw pattern.
 */
-
 inventorySchema.pre("save", async function () {
 
     const item = this;
 
+    // Only check if SKU or Warehouse has changed
+    if (!item.isModified('sku') && !item.isModified('warehouse')) {
+        return; 
+    }
+
     const duplicate = await mongoose.models.InventoryItem.findOne({
         sku: item.sku,
-        warehouseId: item.warehouse,
+        warehouse: item.warehouse,
         _id: { $ne: item._id }
     });
 
     if (duplicate) {
+        // In async middleware, simply throwing an error stops the save
         throw new Error(
-                `SKU "${item.sku}" already exists in this warehouse. Duplicate not allowed.`
-            
+            `SKU "${item.sku}" already exists in this warehouse. Duplicate not allowed.`
         );
     }
-
-    
-
 });
 
-/*
-    PRE-SAVE: Adjust Warehouse capacity when quantity changes
-*/
-
-inventorySchema.pre("save", async function () {
-    const item = this;
-
-    // Detect if this is a new item or an update
-    const isNew = item.isNew;
-
-    const oldItem = !isNew
-        ? await mongoose.models.InventoryItem.findById(item._id)
-        : null;
-
-    const qtyDifference = isNew
-        ? item.quantity     // adding all qty
-        : item.quantity - oldItem.quantity;
-
-    // If no capacity change, skip
-    if (qtyDifference === 0 ) return;
-
-    // Get warehouse
-    const warehouse = await Warehouse.findById(item.warehouse);
-    if (!warehouse) {
-        throw new Error("Warehouse not found");
-    }
-
-    // Check capacity
-    if (warehouse.currentCapacity + qtyDifference > warehouse.maxCapacity) {
-        throw new Error(
-                `Not enough space in warehouse. Adding ${qtyDifference} items exceeds max capacity. `
-        );
-    }
-
-    // Apply capacity change
-    warehouse.currentCapacity += qtyDifference;
-    await warehouse.save();
-
-});
-
-
-/*
-    PRE-DELETE: Adjust warehouse capacity when an item is deleted
-*/
-inventorySchema.pre("deleteOne", { document: true, query: false}, async function() {
-
-    const item = this;
-
-    const warehouse = await Warehouse.findById(item.warehouse);
-    if (!warehouse) throw new Error("Warehouse not found");
-
-    warehouse.currentCapacity -= item.quantity;
-    if (warehouse.currentCapacity < 0) warehouse.currentCapacity = 0;
-
-    await warehouse.save();
-});
-
-
-/*
-    PRE-DELETE: Adjust Warehouser capacity when deleting via findOneAndDelete
-*/
-inventorySchema.pre("findOneAndDelete", async function () {
-    const item = await this.model.findOne(this.getQuery());
-    if (!item) return;
-
-    const warehouse = await Warehouse.findById(item.warehouse);
-    if (!warehouse) throw new Error ("Warehouse not found");
-
-    warehouse.currentCapacity -= item.quantity;
-    if (warehouse.currentCapacity < 0) warehouse.currentCapacity = 0;
-
-    await warehouse.save();
-});
-
-
-/*
-    STATIC METHOD: Reduce quantity (and capacity)
-*/
-
-inventorySchema.statics.reduceQuantity = async function (itemId, amount) {
-    if (amount <= 0) throw new Error ("Amount must be positive");
-
-    const item = await this.findById(itemId);
-    if (!item) throw new Error ("Item not found");
-
-    if (item.quantity < amount)
-        throw new Error("Not enough items in stock to remove");
-
-    item.quantity -= amount;
-
-    // Update warehouse capacity
-    const warehouse = await Warehouse.findById(item.warehouse);
-    warehouse.currentCapacity -= amount;
-    await warehouse.save();
-
-    return item.save();
-};
+// ---------------------------------------------------------
+// 🚨 NOTE: Capacity logic is intentionally removed from here.
+// The Service layer (inventoryService.js) handles capacity.
+// ---------------------------------------------------------
 
 const InventoryItem = mongoose.model("InventoryItem", inventorySchema);
 export default InventoryItem;
-

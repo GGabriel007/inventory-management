@@ -9,7 +9,7 @@ import WarehouseEditPage from "./pages/WarehouseEditPage";
 import { Toaster } from "react-hot-toast";
 import WarehouseCreatePage from "./pages/warehouseCreatePage";
 import InventoryCreatePage from "./pages/InventoryCreatePage";
-
+import Footer from "./components/layout/Footer";
 
 function App() {
   return (    
@@ -36,6 +36,8 @@ function App() {
         <Route path="/warehouses/:warehouseId/inventory/new" element={<InventoryCreatePage />} 
 />
         </Routes>
+
+        <Footer />
       
     </div>
       );

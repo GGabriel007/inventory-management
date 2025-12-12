@@ -1,19 +1,4 @@
-/* 
-    backend/src/models/Warehouse.js
-    Fields
-
-    name -> String, required
-    location -> String, required
-    Maxcapacity -> Number, required (max capacity)
-    currentCapacity -> Number, default 0 (to track how full the warehouse is)
-    createdAt -> Date, default now
-
-    - When creating a warehouse, set name, location, and maxCapacity, currentCapacity will default to 0.
-    - When adding iventory items, call Warehouse.increaseCapacity(warehouseId, qty) after validating 
-      item creation (or as part of a transaction/sequence) to ensure atomic updates and capacity checks.
-    - When removing items or transferring out, call Warehouse.decreaseCapacity(warehouseId, qty).
-
-*/
+/* backend/src/models/Warehouse.js */
 
 import mongoose from "mongoose";
 
@@ -36,10 +21,10 @@ const warehouseSchema = new Schema (
             required: [true, "Max capacity is required"],
             min: [0, "Max capacity cannot be negative"],
         },
-        code: { 
-            type: String, 
-            unique: true, 
-            uppercase:true 
+        code: {
+            type: String,
+            unique: true,
+            sparse: true 
         },
         currentCapacity: {
             type: Number,
@@ -58,26 +43,18 @@ const warehouseSchema = new Schema (
 // Prevent two warehouses with same name & location
 warehouseSchema.index({ name: 1, location: 1}, { unique: true});
 
-// Validation: ensure currentCapacity never exceeds maxCapacity
-warehouseSchema.pre("validate", function (){
+// 🚨 UPDATED: Async Validation Hook (No 'next' param)
+warehouseSchema.pre("validate", async function () {
     if (this.currentCapacity > this.maxCapacity) {
-        return next (
-            new Error (
-                `currentCapacity (${this.currentCapacity}) exceeds maxCapacity (${this.maxCapacity})`
-            )
+        throw new Error(
+            `currentCapacity (${this.currentCapacity}) exceeds maxCapacity (${this.maxCapacity})`
         );
     }
 });
 
 /**
  * Atomically increase currentCapacity by qty.
- * Throws an error if it would exceed maxCapacity.
- * 
- * Usage in controllers:
- * await Warehouse.increaseCapacity(warehouseId, qtyToAdd);
- * 
  */
-
 warehouseSchema.statics.increaseCapacity = async function (warehouseId, amount) {
     if(amount <= 0) {
         throw new Error("Amount must be positive");
@@ -92,15 +69,11 @@ warehouseSchema.statics.increaseCapacity = async function (warehouseId, amount) 
 
     warehouse.currentCapacity += amount;
     return warehouse.save();
-    
 };
 
 /**
  * Atomically decrease currentCapacity by qty.
- * Throws an error if it would go below zero.
- * 
  */
-
 warehouseSchema.statics.decreaseCapacity = async function (warehouseId, amount) {
     if(amount <= 0) {
         throw new Error("Amount must be positive");
