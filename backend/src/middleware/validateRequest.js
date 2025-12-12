@@ -1,5 +1,0 @@
-/*
-    validateRequest.js
-    optional validation for incoming requests
-    Validate required fields before hitting controller
-*/

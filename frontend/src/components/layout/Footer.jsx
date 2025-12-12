@@ -15,7 +15,7 @@ export default function Footer() {
                     <div style={styles.column}>
                         <h3 style={styles.brandTitle}>Inventory Management System</h3>
                         <p style={styles.brandDesc}>
-                            Professional Inventory Management for modern logistics and warehousing.
+                            Inventory Management for logistics and warehousing.
                         </p>
                     </div>
 
@@ -57,7 +57,7 @@ export default function Footer() {
 
                 {/* Bottom Section: Copyright */}
                 <div style={styles.bottomBar}>
-                    <span>© {currentYear} SkillStorm. All rights reserved.</span>
+                    <span>By Gabriel Gonzalez from ©{currentYear} SkillStorm </span>
                     <span style={styles.version}>v1.0.0 (Demo)</span>
                 </div>
 
