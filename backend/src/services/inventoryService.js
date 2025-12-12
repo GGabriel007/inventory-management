@@ -1,3 +1,14 @@
+/**
+ * inventoryService.js
+ * * Business Logic Layer for Inventory Operations.
+ * * This file handles the core rules of the application:
+ * 1. Capacity Management (checking limits before adds/transfers).
+ * 2. SKU Generation (auto-incrementing sequences).
+ * 3. Warehouse Transfers (moving items and updating counts).
+ * 4. Data Validation (preventing duplicates).
+ */
+
+
 import {
     createItem,
     findItemId,
@@ -21,6 +32,16 @@ import {
 
 const formatSequenceNumber = (num) => String(num).padStart(4, '0');
 
+
+/**
+ * Orchestrates the bulk transfer of inventory items between two warehouses.
+ * * Performs strict capacity validation on the destination before processing.
+ * * Handles SKU conflicts: 
+ * - If the SKU exists in the destination, a new Item with a new SKU is created.
+ * - If the SKU is unique, the existing Item is moved (warehouse ID updated).
+ * * Updates capacity for both source (decrease) and destination (increase).
+ * */
+
 export const bulkTransferInventoryService = async ({ 
     sourceWarehouseId, 
     destinationWarehouseId, 
@@ -28,7 +49,7 @@ export const bulkTransferInventoryService = async ({
 }) => {
     const totalUnitsToTransfer = items.reduce((sum, item) => sum + item.quantity, 0);
 
-    // 1. Capacity Check for Destination Warehouse
+    //  Capacity Check for Destination Warehouse
     const destWarehouse = await findWarehouseById(destinationWarehouseId);
     if (!destWarehouse) {
         throw new Error("Destination warehouse not found.");
@@ -40,7 +61,7 @@ export const bulkTransferInventoryService = async ({
         throw new Error(`Transfer failed: Destination warehouse capacity of ${remainingCapacity} units is exceeded by the ${totalUnitsToTransfer} units being moved.`);
     }
 
-    // 2. Process Transfers Item by Item
+    //  Process Transfers Item by Item
     const results = [];
     const destWarehousePrefix = destWarehouse.name[0].toUpperCase();
 
@@ -59,19 +80,17 @@ export const bulkTransferInventoryService = async ({
         let isNewItemNeeded = false;
         
         if (transferQuantity < sourceItem.quantity) {
-             // If partial transfer, a new item must be created in the destination, 
-             // and it MUST get a new SKU.
              isNewItemNeeded = true;
         } else {
-            // Full transfer: Check if the current SKU exists in the destination warehouse.
+            
             const existingDestItems = await findItemsByWarehouse(destinationWarehouseId);
             const skuExistsInDest = existingDestItems.some(item => item.sku === sourceItem.sku);
 
             if (skuExistsInDest) {
-                // If the SKU exists in the destination, we must create a new item with a new SKU.
+                
                 isNewItemNeeded = true;
             } else {
-                // Full transfer and SKU is unique in destination, we just update the warehouse ID of the sourceItem.
+                
                 isNewItemNeeded = false;
             }
         }
@@ -87,28 +106,20 @@ export const bulkTransferInventoryService = async ({
         
         // A. Handle Source Warehouse Update
         if (transferQuantity < sourceItem.quantity) {
-            // Partial Transfer: Decrease quantity in source item
             const remainingQuantity = sourceItem.quantity - transferQuantity;
             await updateItem(sourceItem._id, { quantity: remainingQuantity });
         } else {
-            // Full Transfer: Remove capacity from source warehouse
-            // (Capacity update is handled in the final step for simplicity, but we mark the source item for 'deletion' in terms of warehouse link)
-            // If full transfer AND no new SKU needed, we update the warehouse ID of the existing item
             if (!isNewItemNeeded) {
                 await updateItem(sourceItem._id, { 
                     warehouse: destinationWarehouseId, 
-                    sku: newSku // Should be the old SKU if no new needed
+                    sku: newSku 
                 });
             } else {
-                 // Full transfer but needs new SKU, we essentially "delete" the old item 
-                 // and create a new one (or just let it stay, and we create the new one, 
-                 // then the capacity update handles the source reduction.)
-                 // To simplify: we reduce the quantity to zero, and the final capacity update will account for it.
                  await updateItem(sourceItem._id, { quantity: 0 });
             }
         }
 
-        // B. Handle Destination Warehouse Item (Creation or Update)
+        // Handle Destination Warehouse Item 
         if (isNewItemNeeded) {
             // Create New Item in destination with new SKU and transfer quantity
             const newItemData = {
@@ -117,13 +128,10 @@ export const bulkTransferInventoryService = async ({
                 category: sourceItem.category,
                 sku: newSku,
                 quantity: transferQuantity,
-                storageLocation: sourceItem.storageLocation, // Keep location if applicable
+                storageLocation: sourceItem.storageLocation,
                 warehouse: destinationWarehouseId
             };
             await createItem(newItemData);
-        } else {
-            // Full transfer where SKU is unique in destination: 
-            // We already updated the warehouse ID in the 'Source Update' step for this item.
         }
 
         results.push({
@@ -137,7 +145,7 @@ export const bulkTransferInventoryService = async ({
 
     
 
-    // 3. Final Capacity Update
+    // Final Capacity Update
     // Reduce capacity in source warehouse
     await incrementCapacity(sourceWarehouseId, -totalUnitsToTransfer);
     // Increase capacity in destination warehouse
@@ -149,7 +157,7 @@ export const bulkTransferInventoryService = async ({
         itemsTransferred: results.map(item => ({ 
             id: item.itemId, 
             quantity: item.transferQuantity, 
-            name: item.itemName // Use the name we added to the results array
+            name: item.itemName 
         }))
     };
 
@@ -157,10 +165,10 @@ export const bulkTransferInventoryService = async ({
 };
 
 export const createInventoryItemService = async (itemData) => {
-    // 1. Destructure input
+    // Destructure input
     const { warehouse: warehouseId, quantity, ...otherItemData } = itemData;
 
-    // 2. Initial Validation: Check if Warehouse exists & get details for capacity check AND SKU generation
+    // Initial Validation: Check if Warehouse exists & get details for capacity check AND SKU generation
     const warehouseDoc = await findWarehouseById(warehouseId);
     if (!warehouseDoc) throw new Error("Warehouse not found");
 
@@ -170,33 +178,33 @@ export const createInventoryItemService = async (itemData) => {
     
     // --- SKU GENERATION STARTS HERE ---
     
-    // 3. Get the item count for the sequence number (e.g., 4)
+    // Get the item count for the sequence number
     const currentItemCount = await countItemsByWarehouse(warehouseId);
     
-    // 4. Calculate the next sequence number (4 + 1 = 5)
+    // Calculate the next sequence number 
     const nextSequence = currentItemCount + 1;
     
-    // 5. Get the warehouse code prefix (e.g., 'T' from "Test Warehouse")
+    // Get the warehouse code prefix (e.g., 'T' from "Test Warehouse")
     const warehousePrefix = warehouseDoc.name[0].toUpperCase();
     
-    // 6. Generate the unique SKU: T-0005
+    // Generate the unique SKU: T-0005
     const formattedSequence = formatSequenceNumber(nextSequence);
     const newSKU = `${warehousePrefix}-${formattedSequence}`; 
     
     // --- SKU GENERATION ENDS HERE ---
 
-    // 7. Construct Payload
+    // Construct Payload
     const finalItemPayload = {
         ...otherItemData,
         quantity,
-        sku: newSKU, // 🚨 Assign the auto-generated SKU
+        sku: newSKU, 
         warehouse: warehouseId
     };
 
-    // 8. Create Item in DB
+    // Create Item in DB
     const newItem = await createItem(finalItemPayload);
 
-    // 9. Update Warehouse Capacity (Uses your existing logic)
+    // Update Warehouse Capacity 
     await incrementCapacity(warehouseId, quantity);
 
     return newItem;
@@ -218,9 +226,12 @@ export const getInventoryItemService = async (id) => {
     return item;
 };
 
-/*
-    UPDATE ITEM 
-*/
+/**
+ * Updates an inventory item.
+ * * Handles complex capacity calculations if the quantity changes.
+ * * Handles logic for moving an item to a different warehouse (decrement old, increment new).
+ * * Ensures strict capacity limits are not exceeded in the target warehouse.
+ */
 export const updateInventoryItemService = async (id, data) => {
     const item = await findItemId(id);
     if (!item) throw new Error("Item not found");
@@ -235,7 +246,6 @@ export const updateInventoryItemService = async (id, data) => {
     const targetWarehouseId = data.warehouse || item.warehouse; 
 
     // Only check duplicate SKU if the user is explicitly trying to change it manually
-    // (If your system disallows manual SKU edits, you can remove this block)
     if(data.sku) {
         const existing = await findDuplicateSKU(data.sku, targetWarehouseId ,id);
         if (existing) {
@@ -253,7 +263,7 @@ export const updateInventoryItemService = async (id, data) => {
         // Removing from old warehouse
         await incrementCapacity(item.warehouse, -oldQty);
 
-        // Add to new warehouse (check capacity)
+        // Add to new warehouse
         if (newWarehouse.currentCapacity + newQty > newWarehouse.maxCapacity){
             throw new Error("New warehouse does not have enough space.");
         }
@@ -275,14 +285,13 @@ export const updateInventoryItemService = async (id, data) => {
 };
 
 /*
-    DELETE ITEM 
+    Deletes an inventory item and releases the associated warehouse capacity.
 */
 export const deleteInventoryItemService = async (id) => {
     const item = await findItemId(id);
     if (!item) throw new Error(`Item not found ${item}`);
     
     // Release capacity
-    // Ensure we don't go below zero (handled by repo logic or check here)
     await incrementCapacity(item.warehouse, -item.quantity);
 
     // Delete item

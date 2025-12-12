@@ -1,6 +1,11 @@
 /**
  * inventoryController.js
- * * Only handles express req/res and passes logic to services
+ * * HTTP Request Handler for Inventory Operations.
+ * * This layer is responsible for:
+ *  Extracting data from Express Request objects (body, params, query).
+ *  Calling the appropriate Business Service.
+ *  Sending the formatted HTTP Response (JSON, Status Codes).
+ *  Passing errors to the global error handling middleware.
  */
 
 import {

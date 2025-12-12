@@ -3,6 +3,15 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import { Link, useNavigate } from "react-router-dom";
 
+/**
+ * WarehousePage.jsx
+ * * The main Warehouse Listing view.
+ * * Features:
+ *  Data Visualization: Displays warehouses as cards with live capacity progress bars.
+ *  Status Indicators: Changes color (Green/Yellow/Red) based on usage percentage.
+ *  Navigation: Entry point to Create Warehouse and Warehouse Details pages.
+ */
+
 export default function WarehousePage() {
     const [warehouses, setWarehouses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,12 +29,12 @@ export default function WarehousePage() {
             });
     }, []);
 
-    // Helper: Determine color based on how full the warehouse is
+    // Determine color based on how full the warehouse is
     const getProgressBarColor = (current, max) => {
         const percentage = (current / max) * 100;
-        if (percentage >= 90) return "#d9534f"; // Red (Critical)
-        if (percentage >= 75) return "#f0ad4e"; // Yellow (Warning)
-        return "#5cb85c"; // Green (Good)
+        if (percentage >= 90) return "#d9534f"; 
+        if (percentage >= 75) return "#f0ad4e"; 
+        return "#5cb85c";
     };
 
     if (loading) return <div style={styles.loadingState}>Loading warehouses...</div>;
@@ -56,7 +65,7 @@ export default function WarehousePage() {
                     </div>
                 ) : (
                     warehouses.map(w => {
-                        // Calculate percentage for width, capped at 100%
+                        // Calculate percentage for width
                         const percentage = Math.min((w.currentCapacity / w.maxCapacity) * 100, 100);
                         const barColor = getProgressBarColor(w.currentCapacity, w.maxCapacity);
 
@@ -105,7 +114,7 @@ export default function WarehousePage() {
     );
 }
 
-// --- Professional CSS-in-JS ---
+// --- Style ---
 const styles = {
     pageContainer: {
         maxWidth: "1200px",
@@ -185,7 +194,7 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
-        ":hover": { // Note: Inline styles don't support pseudo-classes directly like CSS, but this is conceptual
+        ":hover": { 
             transform: "translateY(-4px)",
             boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
         }

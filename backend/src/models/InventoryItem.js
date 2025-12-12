@@ -1,18 +1,12 @@
-/*
-    Fields
-        warehouse -> ObjectId -> references Warehouse
-        name -> String, required 
-        sku -> String, required, unique per warehouse
-        description -> String
-        quantity -> Number, required
-        category
-        storageLocation -> String
-        createdAt -> Date, default now 
-*/
+/**
+ * InventoryItem.js
+ * * Mongoose Schema for Inventory Items.
+ * * Defines the structure of inventory records stored in the database.
+ * * Includes pre-save middleware to enforce SKU uniqueness within a warehouse scope.
+ */
 
 import mongoose from "mongoose";
 
-// Note: Warehouse import is not needed here anymore as capacity logic is in the Service.
 
 const inventorySchema = new mongoose.Schema(
     {
@@ -53,10 +47,11 @@ const inventorySchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-/*
-    PRE-SAVE: Prevent duplicate SKU inside same warehouse
-    FIX: Removed 'next' parameter. using async/throw pattern.
-*/
+/**
+ * Pre-Save Hook: Enforce Unique SKU per Warehouse
+ * * Before saving, this hook checks if an item with the same SKU already exists
+ * in the target warehouse. If found, it throws an error to prevent duplication.
+ */
 inventorySchema.pre("save", async function () {
 
     const item = this;
@@ -73,17 +68,12 @@ inventorySchema.pre("save", async function () {
     });
 
     if (duplicate) {
-        // In async middleware, simply throwing an error stops the save
         throw new Error(
             `SKU "${item.sku}" already exists in this warehouse. Duplicate not allowed.`
         );
     }
 });
 
-// ---------------------------------------------------------
-// 🚨 NOTE: Capacity logic is intentionally removed from here.
-// The Service layer (inventoryService.js) handles capacity.
-// ---------------------------------------------------------
 
 const InventoryItem = mongoose.model("InventoryItem", inventorySchema);
 export default InventoryItem;

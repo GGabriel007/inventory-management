@@ -6,6 +6,15 @@ import Select from "react-select";
 import { State, City } from "country-state-city";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * WarehouseCreatePage.jsx
+ * * Form interface for creating new Warehouse entities.
+ * * Features:
+ *  Dynamic Location Selection: Uses 'country-state-city' to provide cascading State -> City dropdowns.
+ *  Input Validation: Ensures all fields are filled and capacity is valid before submission.
+ *  API Integration: Sends payload to backend and redirects to the new warehouse's detail view.
+ */
+
 function WarehouseCreatePage() {
   const navigate = useNavigate();
 

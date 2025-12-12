@@ -25,13 +25,15 @@ import { bulkTransfer } from '../controllers/bulkTransfer.controller.js';
 const router = express. Router();
 
 
-
+// --- CRUD Routes ---
 
 router.post("/", createItem);
 router.get("/", getItems);
 router.get("/:id", getItemById);
 router.put("/:id", updateItem);
 router.delete("/:id", deleteItem);
+
+// --- Special Operation 
 router.post('/bulk-transfer', bulkTransfer);
 
 export default router;

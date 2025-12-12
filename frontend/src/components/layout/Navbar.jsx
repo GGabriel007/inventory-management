@@ -1,4 +1,13 @@
 // /components/layout/Navbar.jsx
+
+/**
+ * Navbar.jsx
+ * * The main navigation bar component.
+ * * Handles routing between Dashboard, Warehouses, and Inventory pages.
+ * * Includes logic to highlight the active link based on the current URL path.
+ */
+
+
 import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
@@ -42,10 +51,10 @@ export default function Navbar() {
     );
 }
 
-// --- STYLES ---
+// --- Styles ---
 const styles = {
     navbar: {
-        backgroundColor: "#1976d2", // Primary Blue to match your buttons
+        backgroundColor: "#1976d2", 
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
         position: "sticky",
         top: 0,
@@ -53,10 +62,10 @@ const styles = {
         width: "100%",
     },
     container: {
-        maxWidth: "1200px", // Matches your page containers
+        maxWidth: "1200px", 
         margin: "0 auto",
         padding: "0 20px",
-        height: "64px", // Standard navbar height
+        height: "64px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -83,7 +92,7 @@ const styles = {
         display: "flex",
         gap: "30px",
     },
-    // Default Link Style (Slightly transparent white)
+    
     link: {
         color: "rgba(255, 255, 255, 0.75)", 
         textDecoration: "none",
@@ -91,9 +100,9 @@ const styles = {
         fontWeight: "500",
         transition: "color 0.2s, opacity 0.2s",
         padding: "5px 0",
-        borderBottom: "2px solid transparent", // Prevents layout shift on hover
+        borderBottom: "2px solid transparent",
     },
-    // Active Link Style (Bright white + border)
+    
     linkActive: {
         color: "white",
         textDecoration: "none",

@@ -1,6 +1,16 @@
 // /pages/InventoryCreatePage.jsx
 // Add new inventory item
 
+/**
+ * InventoryCreatePage.jsx
+ * * Provides a form to add new inventory items to a specific warehouse.
+ * * Features:
+ *  Fetches and displays warehouse context (Name/ID).
+ *  Handles form validation (required fields).
+ *  Submits data to the API and handles specific error cases (Capacity/SKU conflicts).
+ *  Navigates to the new item's detail page upon success.
+ */
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
@@ -188,7 +198,7 @@ export default function InventoryCreatePage() {
     );
 };
 
-// --- Professional Styles ---
+// --- Styles ---
 const styles = {
     pageBackground: {
         backgroundColor: "#f4f6f8",

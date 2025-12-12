@@ -1,8 +1,19 @@
 // /pages/InventoryDetailPage.jsx
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import toast from "react-hot-toast"; 
+
+/**
+ * InventoryDetailPage.jsx
+ * * Displays comprehensive details for a specific inventory item.
+ * * Features:
+ *  Fetches item data by ID from the API.
+ *  Handles data population issues (e.g., if warehouse details are missing).
+ *  Visualizes stock status (Green/Yellow/Red) based on quantity thresholds.
+ *  Shows timestamps and system metadata.
+ */
 
 export default function InventoryDetailPage() {
     const { id } = useParams();

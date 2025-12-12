@@ -1,4 +1,10 @@
 /* backend/src/models/Warehouse.js */
+/**
+ * Warehouse.js
+ * * Mongoose Schema for Warehouses.
+ * * Defines the structure for storage locations including capacity constraints.
+ * * Includes atomic static methods for safe capacity management.
+ */
 
 import mongoose from "mongoose";
 
@@ -43,7 +49,11 @@ const warehouseSchema = new Schema (
 // Prevent two warehouses with same name & location
 warehouseSchema.index({ name: 1, location: 1}, { unique: true});
 
-// 🚨 UPDATED: Async Validation Hook (No 'next' param)
+/**
+ * Pre-Validate Hook: Enforce Capacity Limits
+ * * Ensures that 'currentCapacity' never exceeds 'maxCapacity' before any save operation.
+ * This acts as a database-level safety net.
+ */
 warehouseSchema.pre("validate", async function () {
     if (this.currentCapacity > this.maxCapacity) {
         throw new Error(
@@ -53,7 +63,8 @@ warehouseSchema.pre("validate", async function () {
 });
 
 /**
- * Atomically increase currentCapacity by qty.
+ * Atomically increases the current capacity of a warehouse.
+ * * Validates that the increase will not exceed the maximum limit.
  */
 warehouseSchema.statics.increaseCapacity = async function (warehouseId, amount) {
     if(amount <= 0) {
@@ -72,7 +83,8 @@ warehouseSchema.statics.increaseCapacity = async function (warehouseId, amount) 
 };
 
 /**
- * Atomically decrease currentCapacity by qty.
+ * Atomically decreases the current capacity of a warehouse.
+ * * Validates that the decrease will not drop below zero.
  */
 warehouseSchema.statics.decreaseCapacity = async function (warehouseId, amount) {
     if(amount <= 0) {

@@ -1,5 +1,15 @@
 // /components/TransferToast.jsx
 
+/**
+ * TransferToast.jsx
+ * * A specialized UI component rendered inside a Toast.
+ * * Handles the complex user flow for bulk transfers:
+ *  Selecting a destination warehouse.
+ *  Adjusting quantities for each item being transferred.
+ *  Submitting the transfer payload to the backend.
+ *  Displaying a summary upon success.
+ */
+
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import axiosClient from '../api/axiosClient';
@@ -16,13 +26,12 @@ const TransferToast = ({
     // State to track the selected destination warehouse ID
     const [destinationId, setDestinationId] = useState('');
     
-    // State to track transfer quantities for each item (defaulting to max quantity)
-    // { itemId: quantityToTransfer, ... }
+    // State to track transfer quantities for each item (defaulting to max quantity
     const [transferQuantities, setTransferQuantities] = useState(
         itemsToTransfer?.reduce((acc, item) => { // Use optional chaining to prevent crash if undefined
             acc[item._id || item.id] = item.quantity;
             return acc;
-        }, {}) ?? {} // Default to an empty object if reduce doesn't run
+        }, {}) ?? {}
     );
 
     // Calculate the total number of units to be moved
@@ -55,7 +64,7 @@ const TransferToast = ({
             items: itemsToTransfer.map(item => ({
                 itemId: item._id || item.id,
                 quantity: transferQuantities[item._id || item.id]
-            })).filter(item => item.quantity > 0) // Only send items with quantity > 0
+            })).filter(item => item.quantity > 0) 
         };
 
         if (transferPayload.items.length === 0) {
@@ -65,7 +74,7 @@ const TransferToast = ({
 
         setIsSubmitting(true);
         try {
-            // 🚨 PHASE 2: CALL THE BACKEND API
+    
             await axiosClient.post('/inventory/bulk-transfer', transferPayload);
             
             // Success
@@ -76,14 +85,13 @@ const TransferToast = ({
             console.error("Transfer Error:", error);
             const errorMessage = error.response?.data?.message || "Transfer failed due to capacity or server error.";
             toast.error(errorMessage, { id: 'transfer-err' });
-            setIsSubmitting(false); // Re-enable the button
+            setIsSubmitting(false);
         }
     };
 
     const showSuccessToast = (details) => {
     const { destinationWarehouseName, itemsTransferred } = details;
     
-    // Format the list of transferred items
     const itemList = (
         <ul style={{ margin: '5px 0 0 15px', padding: 0, listStyleType: 'disc' }}>
             {itemsTransferred.map((item, index) => (
@@ -94,10 +102,9 @@ const TransferToast = ({
         </ul>
     );
 
-    // Display the final toast using the standard toast.success method
     toast.success(
         <div>
-            <h4>✅ Transfer Complete!</h4>
+            <h4>Transfer Complete!</h4>
             <p style={{ margin: '5px 0', fontWeight: 'bold' }}>
                 Items transferred to **{destinationWarehouseName}** successfully:
             </p>

@@ -1,4 +1,10 @@
 // /components/layout/Footer.jsx
+/**
+ * Footer.jsx
+ * * The main footer component displayed at the bottom of the application.
+ * * Contains brand information, navigation links, support resources, and copyright details.
+ */
+
 import { Link } from "react-router-dom";
 
 export default function Footer() {
@@ -66,13 +72,13 @@ export default function Footer() {
     );
 }
 
-// --- Dark Theme Professional Styles ---
+// --- Styles ---
 const styles = {
     footer: {
-        backgroundColor: "#1976d2", // Dark Slate/Grey
-        color: "#ffffffff", // Light Grey text
+        backgroundColor: "#1976d2", 
+        color: "#ffffffff", 
         padding: "40px 0 20px 0",
-        marginTop: "auto", // Pushes footer to bottom if page is short
+        marginTop: "auto",
         fontSize: "0.9rem",
         borderTop: "1px solid #ffffffff",
     },
@@ -103,7 +109,7 @@ const styles = {
     },
     brandDesc: {
         lineHeight: "1.6",
-        color: "#ffffffff", // Muted grey
+        color: "#ffffffff",
         margin: 0,
         maxWidth: "300px",
     },
@@ -135,12 +141,12 @@ const styles = {
         
     },
     statusOnline: {
-        color: "#10b981", // Green
+        color: "#10b981", 
         fontWeight: "bold",
     },
     divider: {
         height: "1px",
-        backgroundColor: "#6da5ffff", // Slightly lighter than bg
+        backgroundColor: "#6da5ffff", 
         marginBottom: "20px",
     },
     bottomBar: {

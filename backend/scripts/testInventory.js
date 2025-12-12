@@ -58,7 +58,7 @@ async function run() {
 
         const item2 = await InventoryItem.create({
             name: "Laptop Warehouse B",
-            sku: "LT-123",  // Same SKU but different warehouse
+            sku: "LT-123",  
             description: "Same SKU different warehouse",
             quantity: 5,
             warehouseId: warehouseB._id,

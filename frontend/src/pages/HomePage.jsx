@@ -1,4 +1,10 @@
 // /pages/HomePage.jsx
+
+/**
+ * HomePage.jsx
+ * * The main Landing Page 
+ */
+
 import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {

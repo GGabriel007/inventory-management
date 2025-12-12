@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import toast from "react-hot-toast";
 
-// --- COMPONENT: Professional Delete Modal ---
+/**
+ * WarehouseDetailPage.jsx
+ * * Detailed view for a specific Warehouse entity.
+ * * Features:
+ *  Visualizes capacity utilization with a progress bar.
+ *  Displays warehouse metadata (ID, Location, Timestamps).
+ *  Provides access to edit functionality.
+ *  Implements safe deletion logic (Modal + Capacity Check).
+ */
+
+// --- Professional Delete Modal ---
 function DeleteConfirmationModal({ warehouseName, onCancel, onConfirm }) {
     const [input, setInput] = useState("");
 
@@ -71,9 +81,9 @@ export default function WarehouseDetailPage() {
         fetchWarehouse();
     }, [id]);
 
-    // 1. Initial Check: User clicks "Delete" button
+    // Initial Check: User clicks "Delete" button
     const handleInitialDeleteClick = () => {
-        // 🚨 VALIDATION: Check if warehouse is empty
+        // Check if warehouse is empty
         if (warehouse.currentCapacity > 0) {
             toast.error(
                 `Cannot delete warehouse! It contains ${warehouse.currentCapacity} items. Please transfer or remove them first.`,
@@ -86,7 +96,7 @@ export default function WarehouseDetailPage() {
         openDeleteToast();
     };
 
-    // 2. Final Action: Executed after modal confirmation
+    // Final Action: Executed after modal confirmation
     const handleDelete = async (inputName) => {
         if (inputName !== warehouse.name) {
             toast.error("Name mismatch. Deletion cancelled.");
@@ -131,9 +141,9 @@ export default function WarehouseDetailPage() {
     // Helper: Calculate progress bar color
     const getCapacityColor = (current, max) => {
         const percentage = (current / max) * 100;
-        if (percentage >= 90) return "#d9534f"; // Red (Critical)
-        if (percentage >= 75) return "#f0ad4e"; // Yellow (Warning)
-        return "#5cb85c"; // Green (Good)
+        if (percentage >= 90) return "#d9534f"; 
+        if (percentage >= 75) return "#f0ad4e"; 
+        return "#5cb85c"; 
     };
 
     if (loading) return <div style={styles.loading}>Loading warehouse details...</div>;
@@ -144,14 +154,14 @@ export default function WarehouseDetailPage() {
 
     return (
         <div style={styles.pageContainer}>
-            {/* 1. Navigation */}
+            {/* Navigation */}
             <div style={styles.topBar}>
                 <button style={styles.backButton} onClick={() => navigate("/warehouses")}>
                      Back to Warehouses
                 </button>
             </div>
 
-            {/* 2. Main Card */}
+            {/* Main Card */}
             <div style={styles.card}>
                 
                 {/* Header */}
@@ -177,7 +187,7 @@ export default function WarehouseDetailPage() {
                 {/* Body Content */}
                 <div style={styles.gridContainer}>
                     
-                    {/* Left Col: Capacity Visuals */}
+                    {/* Left Col */}
                     <div style={styles.column}>
                         <h3 style={styles.sectionTitle}>Capacity Utilization</h3>
                         
@@ -232,7 +242,7 @@ export default function WarehouseDetailPage() {
                         </div>
 
                         <div style={{marginTop: 'auto', paddingTop: '20px'}}>
-                            {/* 🚨 UPDATED DELETE BUTTON: Calls the validation function first */}
+                
                             <button onClick={handleInitialDeleteClick} style={styles.btnDeleteLink}>
                              Delete this Warehouse
                             </button>
@@ -241,7 +251,7 @@ export default function WarehouseDetailPage() {
                 </div>
             </div>
 
-            {/* 3. Modal Injection */}
+            {/* Modal Injection */}
             {showDeleteModal && (
                 <DeleteConfirmationModal
                     warehouseName={warehouse.name}

@@ -1,7 +1,8 @@
 /**
- * inventoryRepository.js 
- * 
- * Repositories should only interact with the databse, nothing else.
+ * inventoryRepository.js
+ * * Data Access Layer for Inventory Items.
+ * This file handles direct database interactions using Mongoose models.
+ * It abstracts the database logic away from the Service layer.
  */
 
 import InventoryItem from "../models/InventoryItem.js";
@@ -32,7 +33,13 @@ export const updateItem = async (id, data) =>
 export const deleteItem = async (id) => 
     await InventoryItem.findByIdAndDelete(id);
 
-// Check for duplicate SKU 
+/**
+ * Checks if a specific SKU already exists within a target warehouse.
+ * * This query is dynamic:
+ * 1. If `excludeId` is provided (during an update), it ensures the SKU is unique 
+ * BUT ignores the item currently being updated (so it doesn't flag itself).
+ * 2. If `excludeId` is null (during creation), it simply checks if the SKU exists.
+ */
 export const findDuplicateSKU = async (sku, warehouseId, excludeId = null) =>
     await InventoryItem.findOne({
         sku,
@@ -41,6 +48,5 @@ export const findDuplicateSKU = async (sku, warehouseId, excludeId = null) =>
     });
 
 export const countItemsByWarehouse = async (warehouseId) => {
-    // Assuming 'InventoryItem' model has a field 'warehouse' referencing the warehouse ID
     return await InventoryItem.countDocuments({ warehouse: warehouseId });
 };

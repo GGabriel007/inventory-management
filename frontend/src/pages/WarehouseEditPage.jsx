@@ -6,6 +6,17 @@ import toast from "react-hot-toast";
 import Select from "react-select";
 import { State, City } from "country-state-city";
 
+/**
+ * WarehouseEditPage.jsx
+ * * Interface for modifying existing Warehouse details.
+ * * Features:
+ *  Fetches and pre-fills existing data (including parsing location string).
+ *  Provides read-only view of the current location string while allowing
+ * updates via dropdowns.
+ *  Enforces business rule: Max Capacity cannot be lower than Current Usage.
+ *  Handles API updates and redirects upon success.
+ */
+
 export default function WarehouseEditPage() {
     const {id} = useParams();
     const navigate = useNavigate();

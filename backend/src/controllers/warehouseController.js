@@ -1,7 +1,13 @@
-/*
-    warehouseController.js
-    Only handles express req/res and passes logic to services
-*/
+/**
+ * warehouseController.js
+ * * HTTP Request Handler for Warehouse Operations.
+ * * This file acts as the interface between the Express API routes and the business logic services.
+ * * It handles:
+ *  Receiving HTTP requests (GET, POST, PUT, DELETE).
+ *  Extracting data from the request body or parameters.
+ *  Calling the appropriate Service function.
+ *  Sending back the correct HTTP status codes and JSON responses.
+ */
 
 import {
     createWarehouseService,
@@ -11,6 +17,10 @@ import {
     deleteWarehouseService
 } from "../services/warehouseService.js";
 
+/**
+ * Creates a new warehouse.
+ * * Calls the service to create a warehouse record.
+ */
 export const createWarehouse = async (req, res, next) => {
     try {
         const warehouse = await createWarehouseService(req.body);
@@ -20,6 +30,7 @@ export const createWarehouse = async (req, res, next) => {
     }
 };
 
+// Retrieves a list of all warehouses.
 export const getWarehouses = async (req, res) => {
     try {
         const warehouses = await getAllWarehousesService();
@@ -29,6 +40,7 @@ export const getWarehouses = async (req, res) => {
     }
 };
 
+// Returns the warehouse object if found.
 export const getWarehouseById = async (req, res, next) => {
     try {
         const warehouse = await getWarehouseByIdService(req.params.id);
@@ -38,6 +50,7 @@ export const getWarehouseById = async (req, res, next) => {
     }
 };
 
+// Updates an existing warehouse
 export const updateWarehouse = async (req, res) => {
     try {
         const warehouse = await updateWarehouseService(req.params.id, req.body);
@@ -47,11 +60,12 @@ export const updateWarehouse = async (req, res) => {
     }
 };
 
+//  Deletes a warehouse
 export const deleteWarehouse = async (req, res, next) => {
     try {
         await deleteWarehouseService(req.params.id);
         res.json({ message: "Warehouse deleted successfully" });
     } catch (error) {
-        next();
+        next(error);
     }
 };

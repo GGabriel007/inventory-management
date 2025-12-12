@@ -1,6 +1,17 @@
 // /pages/InventoryPage.jsx
 // List inventory items across all warehouses
 
+/**
+ * InventoryPage.jsx
+ * * The main Inventory Listing and Management view.
+ * * Features:
+ *  Lists items across all warehouses, grouped by location.
+ *  Search & Filter: Filter by keyword or "Low Stock" status.
+ *  Selection Mode: Enables checkboxes to select multiple items for bulk actions.
+ *  Bulk Actions: Supports bulk deletion and bulk transfers between warehouses.
+ *  Visual Indicators: Color-coded badges for stock levels (Green/Yellow/Red).
+ */
+
 import { useEffect, useState, useMemo } from "react";
 import axiosClient from "../api/axiosClient";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +87,7 @@ export default function InventoryPage() {
                 successfulDeletes++; 
             }
             toast.dismiss(loadingToastId);
-            toast.success(`✅ Deleted ${successfulDeletes} items`);
+            toast.success(` Deleted ${successfulDeletes} items`);
             
             setSelectedItems([]); 
             setIsSelectionMode(false); 
@@ -124,7 +135,6 @@ export default function InventoryPage() {
         }
     };
 
-    // 🚨 THIS IS THE FIXED FUNCTION
     const handleTransferSelected = () => {
         if (selectedItems.length === 0) {
             toast.error("Select at least one item.");
@@ -133,7 +143,7 @@ export default function InventoryPage() {
         
         const sourceWarehouseId = openWarehouseId;
         
-        // 1. Identify items
+        // Identify items
         const itemsToTransfer = allInventoryItems.filter(item => 
             selectedItems.includes(item._id || item.id) && 
             (item.warehouse._id || item.warehouse.id) === sourceWarehouseId
@@ -144,10 +154,10 @@ export default function InventoryPage() {
              return;
         }
 
-        // 2. Calculate Total Quantity FIRST
+        // Calculate Total Quantity FIRST
         const totalQtyToMove = itemsToTransfer.reduce((sum, item) => sum + item.quantity, 0);
 
-        // 3. Filter destinations based on ID *AND* Capacity
+        // Filter destinations based on ID *AND* Capacity
         const availableDestinations = warehouses.filter(wh => {
             const isDifferent = (wh._id || wh.id) !== sourceWarehouseId;
             const remainingCapacity = wh.maxCapacity - wh.currentCapacity;
@@ -156,13 +166,13 @@ export default function InventoryPage() {
             return isDifferent && (remainingCapacity >= totalQtyToMove);
         });
         
-        // 4. Validate
+        //  Validate
         if (availableDestinations.length === 0) {
             toast.error(`No other warehouses have enough space for ${totalQtyToMove} units.`);
             return;
         }
 
-        // 5. Show Toast
+        // Show Toast
         toast.custom((t) => (
             <TransferToast
                 t={t}
@@ -225,9 +235,9 @@ export default function InventoryPage() {
     // --- UI HELPERS ---
 
     function getStockBadgeStyle(quantity) {
-        if (quantity <= 50) return styles.badgeCritical; // Red
-        if (quantity <= 150) return styles.badgeWarning; // Yellow
-        return styles.badgeSuccess; // Green
+        if (quantity <= 50) return styles.badgeCritical; 
+        if (quantity <= 150) return styles.badgeWarning; 
+        return styles.badgeSuccess; 
     }
 
     if (loading) return <div style={styles.loadingState}>Loading inventory...</div>;
@@ -389,7 +399,7 @@ export default function InventoryPage() {
     );
 }
 
-// --- PROFESSIONAL CSS-IN-JS STYLES ---
+// --- STYLES ---
 const styles = {
     pageContainer: {
         padding: "40px 20px",
@@ -449,7 +459,7 @@ const styles = {
         justifyContent: "space-between",
         alignItems: "center",
         cursor: "pointer",
-        backgroundColor: "#f3f4f6", // Slight grey when open
+        backgroundColor: "#f3f4f6", 
         borderBottom: "1px solid #e5e7eb",
     },
     headerContent: {
@@ -621,7 +631,7 @@ const styles = {
         borderRadius: "8px",
         border: "1px solid #f3f4f6",
         transition: "all 0.2s",
-        cursor: "default", // Default cursor unless selection mode
+        cursor: "default",
         gap: "15px",
         flexWrap: "wrap",
     },
