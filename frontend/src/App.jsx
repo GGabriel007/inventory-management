@@ -8,6 +8,8 @@ import Navbar from "./components/layout/Navbar";
 import WarehouseEditPage from "./pages/WarehouseEditPage";
 import { Toaster } from "react-hot-toast";
 import WarehouseCreatePage from "./pages/warehouseCreatePage";
+import InventoryCreatePage from "./pages/InventoryCreatePage";
+
 
 function App() {
   return (    
@@ -31,6 +33,8 @@ function App() {
         {/* Inventory Routes */}
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/inventory/:id" element={<InventoryDetailPage />} />
+        <Route path="/warehouses/:warehouseId/inventory/new" element={<InventoryCreatePage />} 
+/>
         </Routes>
       
     </div>

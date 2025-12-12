@@ -15,6 +15,9 @@ export const createItem = async (data) =>
 export const findItemId = async (id) => 
     await InventoryItem.findById(id);
 
+export const findItemById = async (id) => 
+    await InventoryItem.findById(id).populate('warehouse');
+
 export const findItemsByWarehouse = async (warehouseId) => 
     await InventoryItem.find({ warehouse: warehouseId });
 
@@ -36,3 +39,8 @@ export const findDuplicateSKU = async (sku, warehouseId, excludeId = null) =>
         warehouse: warehouseId,
         ...(excludeId ? { _id: { $ne: excludeId } }: {}),
     });
+
+export const countItemsByWarehouse = async (warehouseId) => {
+    // Assuming 'InventoryItem' model has a field 'warehouse' referencing the warehouse ID
+    return await InventoryItem.countDocuments({ warehouse: warehouseId });
+};

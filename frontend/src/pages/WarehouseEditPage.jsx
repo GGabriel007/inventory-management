@@ -15,7 +15,8 @@ export default function WarehouseEditPage() {
     const [formData, setFormData] = useState({
         name: "",
         location: "",
-        maxCapacity: 0
+        maxCapacity: 0,
+        currentCapacity: 0
     });
 
     const[selectedState, setSelectedState] = useState(null);
@@ -29,6 +30,7 @@ export default function WarehouseEditPage() {
         value: s.isoCode,
         label: s.name
     }))
+
 
     // Fetching existing warehouse info
     useEffect(() => {
@@ -60,7 +62,8 @@ export default function WarehouseEditPage() {
                 setFormData({
                     name: response.data.name,
                     location: response.data.location,
-                    maxCapacity: response.data.maxCapacity
+                    maxCapacity: response.data.maxCapacity,
+                    currentCapacity: data.currentCapacity || 0
                 });
 
             } catch (error) {
@@ -78,8 +81,24 @@ export default function WarehouseEditPage() {
     // Handle input change
     function handleChange(e) {
         const {name, value} = e.target;
+        
+        // Input validation for Max Capacity
+        if (name === "maxCapacity") {
+            const numValue = parseFloat(value);
+
+            // Preventing negative values from being entered
+            if (value !== "" && numValue < 0) {
+                toast.error("Max capacity cannot be negative");
+                return;
+            }
+
+            setFormData((prev) => ({ ... prev, [name]: value}));
+            return;
+        }
+
         setFormData((prev) => ({ ...prev, [name]: value}));
     }
+
 
     // Handle state selection
     function handleStateChange(selected) {
@@ -116,6 +135,15 @@ export default function WarehouseEditPage() {
 
     // Save update
     async function handleSave() {
+
+        const newMaxCapacity = parseInt(formData.maxCapacity);
+        const currentCapacity = formData.currentCapcity;
+
+        if (newMaxCapacity < currentCapacity) {
+            toast.error(`The new Max Capacity (${newMaxCapacity}) cannot be less than the Current Capacity (${currentCapacity}).`);
+            return;
+        }
+
         try {
 
             const finalLocation = selectedCity && selectedState
@@ -123,7 +151,7 @@ export default function WarehouseEditPage() {
                 : formData.location;
 
             const dataToUpdate = {
-                ...formData,
+                name: formData.name,
                 location: finalLocation,
                 maxCapacity: parseInt(formData.maxCapacity)
             }
@@ -147,6 +175,7 @@ export default function WarehouseEditPage() {
 
             <form onSubmit={(e) => {e.preventDefault(); handleSave();}}>
             <label>Name</label>
+            {/* Name Input */}
             <input
                 type="text"
                 name="name"
@@ -190,12 +219,13 @@ export default function WarehouseEditPage() {
 
                 <br/><br/>
 
-                <label>Max Capacity</label>
+                <label>Max Capacity (Current: {formData.currentCapacity || 0}) </label>
                 <input 
                     type="number"
                     name="maxCapacity"
                     value={formData.maxCapacity}
                     onChange={handleChange}
+                    min={formData.currentCapacity || 0}
                 />
 
                 <br/><br/>
@@ -204,7 +234,7 @@ export default function WarehouseEditPage() {
                 <button 
                     onClick={() => navigate(`/warehouses/${id}`)}
                     style={{ marginLeft: "10px"}}
-                    type="button" // Important to prevent accidental submission
+                    type="button"
                     >
                         Cancel
                     </button>

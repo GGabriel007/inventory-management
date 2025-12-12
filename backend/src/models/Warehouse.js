@@ -36,14 +36,18 @@ const warehouseSchema = new Schema (
             required: [true, "Max capacity is required"],
             min: [0, "Max capacity cannot be negative"],
         },
+        code: { 
+            type: String, 
+            unique: true, 
+            uppercase:true 
+        },
         currentCapacity: {
             type: Number,
             default: 0,
         },
-        meta: {
-            // optional free-form metadata if I want like manage, phone etc.
-            manager: { type: String, trim: true},
-            notes: { type: String, trim: true},
+        inventoryCounter: { 
+            type: Number, 
+            default: 0 
         },
     },
     {

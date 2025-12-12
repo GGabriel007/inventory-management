@@ -20,12 +20,18 @@ import {
     deleteItem
 } from "../controllers/inventoryController.js";
 
+import { bulkTransfer } from '../controllers/bulkTransfer.controller.js';
+
 const router = express. Router();
+
+
+
 
 router.post("/", createItem);
 router.get("/", getItems);
 router.get("/:id", getItemById);
 router.put("/:id", updateItem);
 router.delete("/:id", deleteItem);
+router.post('/bulk-transfer', bulkTransfer);
 
 export default router;

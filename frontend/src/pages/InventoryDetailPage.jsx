@@ -36,9 +36,9 @@ export default function InventoryDetailPage() {
 
             <p> this is the sku {item.sku}</p>
             <p><strong>Quantity:</strong> {item.quantity}</p>
-            <p><strong>Warehouse:</strong> {item.warehouseName}</p>
+            <p><strong>Warehouse:</strong> {item.warehouse}</p>
             <p><strong>Description:</strong> {item.description}</p>
-            <p><strong>ID:</strong> {item.id}</p>
+            <p><strong>ID:</strong> {item._id}</p>
         </div>
     );
 }

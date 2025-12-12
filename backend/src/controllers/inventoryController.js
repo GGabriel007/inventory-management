@@ -1,8 +1,6 @@
 /**
  * inventoryController.js
- * 
- *  Only handles express req/res and passes logic to services
- * 
+ * * Only handles express req/res and passes logic to services
  */
 
 import {
@@ -14,13 +12,16 @@ import {
     getItemsByWarehouseService
 } from "../services/inventoryService.js";
 
-
 /*
     CREATE ITEM
 */
 export const createItem = async (req, res, next) => {
     try {
+        // req.body contains name, quantity, warehouseId, description
+        // SKU is NOT here, it is generated in the service
         const item = await createInventoryItemService(req.body);
+        
+        // Respond with 201 Created and the new item (which includes the SKU)
         res.status(201).json(item);
     } catch(error) {
         next(error);     
@@ -38,7 +39,6 @@ export const getItems = async (req, res, next) => {
         next(error);
     }
 };
-
 
 /*
     GET ITEM BY ID
@@ -64,7 +64,6 @@ export const updateItem = async (req, res, next) => {
     }
 };
 
-
 /*
     DELETE ITEM
 */
@@ -76,7 +75,6 @@ export const deleteItem = async (req, res, next) => {
         next(error);
     }
 };
-
 
 /*
     GET ITEMS BY WAREHOUSE
@@ -95,5 +93,3 @@ export const getItemsByWarehouse = async (req, res, next) => {
         next(error);
     }
 };
-
-

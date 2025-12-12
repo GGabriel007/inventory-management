@@ -22,7 +22,19 @@ export const incrementCapacity = (warehouseId, amount) =>
     Warehouse.findByIdAndUpdate(
         warehouseId,
         { $inc: { currentCapacity: amount } },
-        { new: true}
+        { new: true }
     );
 
-    
+export const findAndIncrementInventoryCounter = async (warehouseId) => {
+    const updatedWarehouse = await Warehouse.findByIdAndUpdate(
+        warehouseId,
+        { $inc: { inventoryCounter: 1 } }, // Increment counter
+        { new: true, select: 'code inventoryCounter' } // Return updated doc
+    );
+
+    if (!updatedWarehouse) {
+        throw new Error(`Warehouse with ID ${warehouseId} not found.`);
+    }
+
+    return updatedWarehouse;
+};

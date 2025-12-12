@@ -38,3 +38,5 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.use("/warehouses", warehouseRoutes);
 app.use("/inventory", inventoryRoutes);
+
+process.setMaxListeners(20);

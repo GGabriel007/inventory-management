@@ -117,6 +117,14 @@ function WarehouseCreatePage() {
         <br />
 
         <button type="submit">Create Warehouse</button>
+
+        <button 
+                    type="button"
+                    onClick={() => navigate("/warehouses")}
+                    style={{ marginLeft: "10px", marginRight: "20px"}}
+                    >
+                        Cancel
+                    </button>
       </form>
     </div>
   );
