@@ -46,7 +46,7 @@ function WarehouseCreatePage() {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
 
     const location = `${city.label}, ${state.label}`;
 
@@ -194,7 +194,7 @@ function WarehouseCreatePage() {
   );
 }
 
-// --- Professional Styles ---
+// --- Styles ---
 const styles = {
     pageBackground: {
         backgroundColor: "#f4f6f8",

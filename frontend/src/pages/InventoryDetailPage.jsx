@@ -25,26 +25,26 @@ export default function InventoryDetailPage() {
     useEffect(() => {
         async function fetchItem() {
             try {
-                // 1. Fetch the Inventory Item
+                // Fetch the Inventory Item
                 const itemResponse = await axiosClient.get(`/inventory/${id}`);
                 let itemData = itemResponse.data;
 
-                // 2. ROBUST WAREHOUSE CHECK
+                // ROBUST WAREHOUSE CHECK
                 const isWarehouseIncomplete = 
                     itemData.warehouse && 
                     (typeof itemData.warehouse === 'string' || !itemData.warehouse.name);
 
                 if (isWarehouseIncomplete) {
                     try {
-                        // Determine the ID safely
+                    
                         const warehouseId = typeof itemData.warehouse === 'string' 
                             ? itemData.warehouse 
                             : itemData.warehouse?._id;
 
                         if (warehouseId) {
-                            // Fetch full warehouse details
+                           
                             const warehouseResponse = await axiosClient.get(`/warehouses/${warehouseId}`);
-                            // Replace the partial info with the full warehouse object
+                            
                             itemData = { ...itemData, warehouse: warehouseResponse.data };
                         }
                     } catch (whError) {
@@ -67,17 +67,17 @@ export default function InventoryDetailPage() {
 
     // --- Helper for Status Colors ---
     const getStockStatus = (qty) => {
-        // 1. Critical Level (Less than 50) -> RED
+        // 1. Critical Level 
         if (qty < 50) {
             return { label: "Critical Stock", color: "#d9534f", bg: "#fde8e8" }; 
         }
         
-        // 2. Warning Level (Less than 150) -> YELLOW
+        // 2. Warning Level 
         if (qty < 150) {
             return { label: "Low Stock", color: "#f0ad4e", bg: "#fcf8e3" }; 
         }
 
-        // 3. Good Level (150 and above) -> GREEN
+        // 3. Good Level 
         return { label: "In Stock", color: "#5cb85c", bg: "#dff0d8" }; 
     };
 
@@ -92,14 +92,14 @@ export default function InventoryDetailPage() {
 
     return (
         <div style={styles.pageContainer}>
-            {/* 1. Top Navigation Bar */}
+            {/* Top Navigation Bar */}
             <div style={styles.topBar}>
                 <button style={styles.backButton} onClick={() => navigate("/inventory")}>
                      Back to Inventory
                 </button>
             </div>
 
-            {/* 2. Main Content Card */}
+            {/* Main Content Card */}
             <div style={styles.card}>
                 
                 {/* Card Header */}
@@ -175,7 +175,7 @@ export default function InventoryDetailPage() {
     );
 }
 
-// --- Internal CSS Styles ---
+// --- Styles ---
 const styles = {
     pageContainer: {
         padding: "40px",

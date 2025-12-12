@@ -63,7 +63,7 @@ export default function Footer() {
 
                 {/* Bottom Section: Copyright */}
                 <div style={styles.bottomBar}>
-                    <span>By Gabriel Gonzalez from ©{currentYear} SkillStorm </span>
+                    <span>By Gabriel Gonzalez from ©SkillStorm {currentYear}</span>
                     <span style={styles.version}>v1.0.0 (Demo)</span>
                 </div>
 
